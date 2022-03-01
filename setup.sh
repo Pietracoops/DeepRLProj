@@ -21,6 +21,7 @@ tput setaf 7;
 
 brew install gcc@7 # make sure homebrew is installed
 
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 tput setaf 2; echo "Cloning Robosuite Repo"
 tput setaf 7;
 
