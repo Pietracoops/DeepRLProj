@@ -143,6 +143,13 @@ export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 export LIBGL_ALWAYS_INDIRECT=0
 ```
 
+# Catkin Make
+Navigate to the folder /home/user/interbotix_ws and run the following command
+
+```
+catkin_make
+```
+
 # Run ROS/Gazebo
 Launch ROS/Gazebo
 ```
