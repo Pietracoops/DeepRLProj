@@ -169,3 +169,42 @@ sudo apt-get autoremove
 sudo apt-get remove ros-*
 sudo apt-get update
 ```
+
+## Massimo's Ubuntu installation for the actual robot manipulation
+First you will need to run the following commands to install the robotics libaries
+
+```
+sudo apt install curl
+curl 'https://raw.githubusercontent.com/Interbotix/interbotix_ros_manipulators/main/interbotix_ros_xsarms/install/amd64/xsarm_amd64_install.sh' > xsarm_amd64_install.sh
+chmod +x xsarm_amd64_install.sh
+./xsarm_amd64_install.sh
+```
+This script will create 3 folders in your home directory. There will be a cmake error in the realsense package, which will force us to make some modifications. The error in the cmake has to do with the c++ function finds_if. You will need to open up the realsense_ws folder in your home and search for this function and add a "std::" namespace to the instances that do not have it. after that you will need to purge the other two folders and modify the xsarm_amd64_install.sh script with the following:
+
+```
+  # Step 2B: Install realsense2 ROS Wrapper
+ REALSENSE_WS=~/realsense_ws
+#  if [ ! -d "$REALSENSE_WS/src" ]; then
+  if [ -d "$REALSENSE_WS/src" ]; then
+    echo "Installing RealSense ROS Wrapper..."
+    # mkdir -p $REALSENSE_WS/src
+    cd $REALSENSE_WS/src
+    # git clone https://github.com/IntelRealSense/realsense-ros.git
+    cd realsense-ros/
+    # git checkout 2.3.1
+    cd $REALSENSE_WS
+    catkin_make clean
+    catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release
+    catkin_make install
+    echo "source $REALSENSE_WS/devel/setup.bash" >> ~/.bashrc
+  else
+    echo "RealSense ROS Wrapper already installed!"
+  fi
+  source $REALSENSE_WS/devel/setup.bash
+```
+
+We will also remove the last couple of lines that were inserted into our bashrc by doing the following:
+
+```
+gedit ~/.bashrc
+```
