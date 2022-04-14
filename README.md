@@ -170,7 +170,7 @@ sudo apt-get remove ros-*
 sudo apt-get update
 ```
 
-## Massimo's Ubuntu installation for the actual robot manipulation
+# Massimo's Ubuntu installation for the actual robot manipulation
 First you will need to run the following commands to install the robotics libaries
 
 ```
@@ -207,4 +207,48 @@ We will also remove the last couple of lines that were inserted into our bashrc 
 
 ```
 gedit ~/.bashrc
+```
+After you connect the arm you can run the following command to enable or disable the actuators.
+```
+rosservice call /vx250/torque_enable "{cmd_type: 'group', name: 'all', enable: true}"
+```
+
+Then you can move the arm into a home position by doing the following
+```
+rostopic pub -1 /vx250/commands/joint_group interbotix_xs_msgs/JointGroupCommand "arm" "[0,0,0,0,0]"
+```
+
+## Python API For moving the arm
+You can run the following script to try manipulating the viperx 250 arm
+
+```
+from interbotix_xs_modules.arm import InterbotixManipulatorXS
+import numpy as np
+
+# This script makes the end-effector perform pick, pour, and place tasks
+#
+# To get started, open a terminal and type 'roslaunch interbotix_xsarm_control xsarm_control.launch robot_model:=wx250'
+# Then change to this directory and type 'python bartender.py'
+
+def main():
+    bot = InterbotixManipulatorXS("vx250", "arm", "gripper")
+    bot.arm.set_ee_pose_components(x=0.3, z=0.2)
+    bot.arm.set_single_joint_position("waist", np.pi/2.0)
+    bot.gripper.open()
+    bot.arm.set_ee_cartesian_trajectory(x=0.1, z=-0.16)
+    bot.gripper.close()
+    bot.arm.set_ee_cartesian_trajectory(x=-0.1, z=0.16)
+    bot.arm.set_single_joint_position("waist", -np.pi/2.0)
+    bot.arm.set_ee_cartesian_trajectory(pitch=1.5)
+    bot.arm.set_ee_cartesian_trajectory(pitch=-1.5)
+    bot.arm.set_single_joint_position("waist", np.pi/2.0)
+    bot.arm.set_ee_cartesian_trajectory(x=0.1, z=-0.16)
+    bot.gripper.open()
+    bot.arm.set_ee_cartesian_trajectory(x=-0.1, z=0.16)
+    bot.arm.go_to_home_pose()
+    bot.arm.go_to_sleep_pose()
+
+if __name__=='__main__':
+    main()
+
 ```
