@@ -252,3 +252,15 @@ if __name__=='__main__':
     main()
 
 ```
+
+## Useful links with regards to viperx 250 arm
+https://www.trossenrobotics.com/viperx-300-robot-arm.aspx#packages
+https://github.com/Interbotix/interbotix_ros_manipulators
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/software_setup.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/specifications/vx250.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/python_ros_interface/index.html
+https://www.youtube.com/watch?v=KoqBEvz4GII&t=436s&ab_channel=TrossenRobotics
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/quickstart.html
+
+Lab tech
+http://www-labs.iro.umontreal.ca/~lokbani/
