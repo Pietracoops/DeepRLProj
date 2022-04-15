@@ -1,0 +1,79 @@
+For Ubuntu 18.04
+
+Follow this guide to install ROS Melodic
+http://wiki.ros.org/melodic/Installation/Ubuntu
+
+or
+
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+
+sudo apt install curl 
+
+curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+
+sudo apt update
+
+sudo apt install ros-melodic-desktop-full
+
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
+
+source ~/.bashrc
+
+sudo apt install python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential
+
+sudo apt install python-rosdep
+
+sudo rosdep init
+
+rosdep update
+
+sudo apt update
+
+sudo apt-get install curl
+
+curl 'https://raw.githubusercontent.com/facebookresearch/pyrobot/main/robots/LoCoBot/install/locobot_install_all.sh' > locobot_install_all.sh
+
+chmod +x locobot_install_all.sh
+
+vim locobot_install_all.sh
+
+Replace "sudo python -m pip install --upgrade pyOpenSSL" with these lines
+sudo python3 -m pip install setuptools_rust
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install rust
+sudo python3 -m pip install --upgrade pyOpenSSL
+
+sudo apt-get install python3-pip
+
+./locobot_install_all.sh -t sim_only -p 3 -l interbotix 2>&1 | tee log.tx
+
+If you seacrh "Pangolin" in the log file you should encounter such an error:
+"Pangolin could not be found because dependency Eigen3 could not be found."
+If this error is encountered, run these commands:
+
+sudo rm -rf /usr/local/include/pangolin 
+
+rm -rf Pangolin/
+
+git clone https://github.com/stevenlovegrove/Pangolin.git
+
+cd Pangolin
+
+git checkout 7987c9b 
+
+mkdir build 
+
+cd build
+
+cmake ..
+
+make -j16
+
+sudo make install
+
+Rerun the installation script
+./locobot_install_all.sh -t sim_only -p 3 -l interbotix 2>&1 | tee log.tx
+
+cd /home/cvu1998/low_cost_ws/src/pyrobot
+
+python -m pip install .
