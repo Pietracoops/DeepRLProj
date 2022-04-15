@@ -208,6 +208,12 @@ We will also remove the last couple of lines that were inserted into our bashrc 
 ```
 gedit ~/.bashrc
 ```
+You will first need to enable the robot with the following command
+
+```
+roslaunch interbotix_xsarm_control xsarm_control.launch robot_model:=vx250
+```
+
 After you connect the arm you can run the following command to enable or disable the actuators.
 ```
 rosservice call /vx250/torque_enable "{cmd_type: 'group', name: 'all', enable: true}"
@@ -217,6 +223,8 @@ Then you can move the arm into a home position by doing the following
 ```
 rostopic pub -1 /vx250/commands/joint_group interbotix_xs_msgs/JointGroupCommand "arm" "[0,0,0,0,0]"
 ```
+
+** NOTE ** if the arm falls into error (red flashing light on motors), you will need to power cycle the robot
 
 ## Python API For moving the arm
 You can run the following script to try manipulating the viperx 250 arm
