@@ -143,6 +143,13 @@ export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 export LIBGL_ALWAYS_INDIRECT=0
 ```
 
+# Catkin Make
+Navigate to the folder /home/user/interbotix_ws and run the following command
+
+```
+catkin_make
+```
+
 # Run ROS/Gazebo
 Launch ROS/Gazebo
 ```
@@ -162,3 +169,98 @@ sudo apt-get autoremove
 sudo apt-get remove ros-*
 sudo apt-get update
 ```
+
+# Massimo's Ubuntu installation for the actual robot manipulation
+First you will need to run the following commands to install the robotics libaries
+
+```
+sudo apt install curl
+curl 'https://raw.githubusercontent.com/Interbotix/interbotix_ros_manipulators/main/interbotix_ros_xsarms/install/amd64/xsarm_amd64_install.sh' > xsarm_amd64_install.sh
+chmod +x xsarm_amd64_install.sh
+./xsarm_amd64_install.sh
+```
+This script will create 3 folders in your home directory. There will be a cmake error in the realsense package, which will force us to make some modifications. The error in the cmake has to do with the c++ function finds_if. You will need to open up the realsense_ws folder in your home and search for this function and add a "std::" namespace to the instances that do not have it. after that you will need to purge the other two folders and modify the xsarm_amd64_install.sh script with the following:
+
+```
+  # Step 2B: Install realsense2 ROS Wrapper
+ REALSENSE_WS=~/realsense_ws
+#  if [ ! -d "$REALSENSE_WS/src" ]; then
+  if [ -d "$REALSENSE_WS/src" ]; then
+    echo "Installing RealSense ROS Wrapper..."
+    # mkdir -p $REALSENSE_WS/src
+    cd $REALSENSE_WS/src
+    # git clone https://github.com/IntelRealSense/realsense-ros.git
+    cd realsense-ros/
+    # git checkout 2.3.1
+    cd $REALSENSE_WS
+    catkin_make clean
+    catkin_make -DCATKIN_ENABLE_TESTING=False -DCMAKE_BUILD_TYPE=Release
+    catkin_make install
+    echo "source $REALSENSE_WS/devel/setup.bash" >> ~/.bashrc
+  else
+    echo "RealSense ROS Wrapper already installed!"
+  fi
+  source $REALSENSE_WS/devel/setup.bash
+```
+
+We will also remove the last couple of lines that were inserted into our bashrc by doing the following:
+
+```
+gedit ~/.bashrc
+```
+After you connect the arm you can run the following command to enable or disable the actuators.
+```
+rosservice call /vx250/torque_enable "{cmd_type: 'group', name: 'all', enable: true}"
+```
+
+Then you can move the arm into a home position by doing the following
+```
+rostopic pub -1 /vx250/commands/joint_group interbotix_xs_msgs/JointGroupCommand "arm" "[0,0,0,0,0]"
+```
+
+## Python API For moving the arm
+You can run the following script to try manipulating the viperx 250 arm
+
+```
+from interbotix_xs_modules.arm import InterbotixManipulatorXS
+import numpy as np
+
+# This script makes the end-effector perform pick, pour, and place tasks
+#
+# To get started, open a terminal and type 'roslaunch interbotix_xsarm_control xsarm_control.launch robot_model:=wx250'
+# Then change to this directory and type 'python bartender.py'
+
+def main():
+    bot = InterbotixManipulatorXS("vx250", "arm", "gripper")
+    bot.arm.set_ee_pose_components(x=0.3, z=0.2)
+    bot.arm.set_single_joint_position("waist", np.pi/2.0)
+    bot.gripper.open()
+    bot.arm.set_ee_cartesian_trajectory(x=0.1, z=-0.16)
+    bot.gripper.close()
+    bot.arm.set_ee_cartesian_trajectory(x=-0.1, z=0.16)
+    bot.arm.set_single_joint_position("waist", -np.pi/2.0)
+    bot.arm.set_ee_cartesian_trajectory(pitch=1.5)
+    bot.arm.set_ee_cartesian_trajectory(pitch=-1.5)
+    bot.arm.set_single_joint_position("waist", np.pi/2.0)
+    bot.arm.set_ee_cartesian_trajectory(x=0.1, z=-0.16)
+    bot.gripper.open()
+    bot.arm.set_ee_cartesian_trajectory(x=-0.1, z=0.16)
+    bot.arm.go_to_home_pose()
+    bot.arm.go_to_sleep_pose()
+
+if __name__=='__main__':
+    main()
+
+```
+
+## Useful links with regards to viperx 250 arm
+https://www.trossenrobotics.com/viperx-300-robot-arm.aspx#packages
+https://github.com/Interbotix/interbotix_ros_manipulators
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/software_setup.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/specifications/vx250.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/python_ros_interface/index.html
+https://www.youtube.com/watch?v=KoqBEvz4GII&t=436s&ab_channel=TrossenRobotics
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/quickstart.html
+
+Lab tech
+http://www-labs.iro.umontreal.ca/~lokbani/
