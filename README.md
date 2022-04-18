@@ -170,6 +170,77 @@ sudo apt-get remove ros-*
 sudo apt-get update
 ```
 
+# Setting up Pyrobot in Ubunto 16.04
+Run the following commands to get the pyrobot install script (Make sure you are in your home directory)
+```
+sudo apt update
+sudo apt upgrade
+sudo apt-get install curl
+curl 'https://raw.githubusercontent.com/facebookresearch/pyrobot/main/robots/LoCoBot/install/locobot_install_all.sh' > locobot_install_all.sh
+```
+
+Edit the locobot_install_all.sh script
+```
+chmod +x locobot_install_all.sh
+vim locobot_install_all.sh
+```
+
+Replace the following lines:
+```
+sudo pip install --upgrade cryptography
+sudo python -m easy_install --upgrade pyOpenSSL
+sudo pip install --upgrade pip==20.3
+```
+With these lines:
+```
+sudo pip install --upgrade pip==20.3
+sudo pip install --upgrade cryptography==3.3.2
+sudo python -m pip install --upgrade pyOpenSSL==21.0.0
+```
+
+The replace all instances of "rosdep update" with:
+```
+rosdep update --include-eol-distros
+```
+
+Run the install script for sim_only:
+```
+./locobot_install_all.sh -t sim_only -p 2 -l interbotix
+```
+
+When the script fails run the following commands:
+```
+sudo pip install cmake
+cd Pangolin
+git checkout 7987c9b
+cd build
+cmake ..
+make -j16
+sudo make install
+```
+
+Rerun the installation script:
+```
+cd
+./locobot_install_all.sh -t sim_only -p 2 -l interbotix
+```
+
+Once the installation completes, make sure to restart the terminal or computer (Depending on where it's running)
+Update Gazebo using the following commands:
+```
+sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install gazebo7 -y
+```
+
+Make sure the display LIBGL variable are set in your bash, if not:
+```
+echo "export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0" >> ~/.bashrc
+echo "export LIBGL_ALWAYS_INDIRECT=0" >> ~/.bashrc
+source ~/.bashrc
+```
+
 # Massimo's Ubuntu installation for the actual robot manipulation
 First you will need to run the following commands to install the robotics libaries
 
