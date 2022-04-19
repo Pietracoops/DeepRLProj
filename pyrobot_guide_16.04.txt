@@ -22,6 +22,7 @@ chmod +x locobot_install_all.sh
 ./locobot_install_all.sh -t sim_only -p 2 -l interbotix
 
 When it fails:
+sudo pip install cmake
 cd Pangolin
 git checkout 7987c9b
 cd build
