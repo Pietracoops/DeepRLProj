@@ -226,6 +226,12 @@ cd
 ```
 
 Once the installation completes, make sure to restart the terminal or computer (Depending on where it's running)
+
+You can test the installation using the following command:
+```
+roslaunch locobot_control main.launch use_arm:=true use_sim:=true teleop:=true use_camera:=true use_base:=true
+```
+
 Update Gazebo using the following commands:
 ```
 sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
