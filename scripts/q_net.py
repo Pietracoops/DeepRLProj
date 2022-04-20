@@ -13,21 +13,21 @@ _str_to_activation = {
     'identity': nn.Identity(),
 }
 
-def getHeightAndWidth(height, width, kernel_size, padding, stride):
-    return ((height - kernel_size + padding * 2) // stride) + 1, ((width - kernel_size + padding * 2) // stride) + 1
+def get_size(size, kernel_size, padding, stride):
+    return ((size - kernel_size + padding * 2) // stride) + 1
 
 class QNetwork():
     
     def __init__(self, net_params):
-        super().__init__()
-        
         self.n_layers = net_params["n_layers"]
         self.input_size = net_params["input_size"]
         self.n_input_channels = net_params["n_input_channels"]
         self.n_channels = net_params["n_channels"]
-        self.stride = net_params["stride"]
         self.kernel_size = net_params["kernel_size"]
+        self.stride = net_params["stride"]
+        self.padding = net_params["padding"]
         self.maxpool_kernel_size = net_params["maxpool_kernel_size"]
+        self.output_size = net_params["output_size"]
         
         self.activation = net_params["activation"]
         
@@ -41,47 +41,55 @@ class QNetwork():
         if isinstance(self.activation, str):
             activation = _str_to_activation[self.activation]
         
+        self.q_net_layers, self.q_net_linear = self.build_nn(activation)
+        self.q_net_target_layers, self.q_net_target_linear = self.build_nn(activation)
+        
+    def build_nn(self, activation):
         layers = []
         size = self.input_size
-        n_channels = self.n_input_channels
-        for _ in range(self.n_layers):
-            padding = (size- 1) // 2
-            layers.append(nn.Conv2d(in_channels=n_channels, 
-                                   out_channels=self.n_channels, 
-                                   kernel_size=self.kernel_size,  
-                                   stride=self.stride, 
-                                   padding=padding))
+        in_n_channels = self.n_input_channels
+        out_n_channels = self.n_channels
+        for _ in range(self.n_layers - 1):
+            layers.append(nn.Conv2d(in_channels=in_n_channels, 
+                                                out_channels=out_n_channels, 
+                                                kernel_size=self.kernel_size,  
+                                                stride=self.stride, 
+                                                padding=self.padding))
             
-            feature_map_height, feature_map_width = getHeightAndWidth(size, 
-                                                                      size,
-                                                                      self.kernel_size,
-                                                                      padding, 
-                                                                      self.stride)
+            size = get_size(size, self.kernel_size, self.padding, self.stride)
             
             layers.append(nn.MaxPool2d(kernel_size=self.maxpool_kernel_size))
             layers.append(activation)
             
-            maxpool_map_height = ((feature_map_height - self.maxpool_kernel_size) // self.maxpool_kernel_size) + 1
-            maxpool_map_width = ((feature_map_width - self.maxpool_kernel_size) // self.maxpool_kernel_size) + 1
+            size = ((size - self.maxpool_kernel_size) // self.maxpool_kernel_size) + 1
             
-            size = maxpool_map_height
-            n_channels = self.n_channels
+            in_n_channels = self.n_channels
+            out_n_channels = self.n_channels
             
-        layers.append(nn.Conv2d(in_channels=n_channels, 
-                               out_channels=1, 
-                               kernel_size=self.kernel_size,  
-                               stride=self.stride, 
-                               padding=padding))
+        layers.append(nn.Conv2d(in_channels=out_n_channels, 
+                                            out_channels=1, 
+                                            kernel_size=self.kernel_size,  
+                                            stride=self.stride, 
+                                            padding=self.padding))
 
-        feature_map_height, feature_map_width = getHeightAndWidth(size, 
-                                                                  size,
-                                                                  self.kernel_size,
-                                                                  padding, 
-                                                                  self.stride)
+        size = get_size(size, self.kernel_size, self.padding, self.stride)
         
-        layers.append(nn.Linear(feature_map_height * feature_map_width, feature_map_height * feature_map_width))
-        self.q_net = nn.Sequential(*layers)
-        self.target_q_net = nn.Sequential(*layers)
+        return layers, nn.Linear(size * size * 1, self.output_size)
+        
+    
+    def q_net(self, state):
+        x = state
+        for layer in self.q_net_layers:
+            y = layer(x)
+            x = y
+        return self.q_net_linear(x)
+    
+    def q_net_target(self, state):
+        x = state
+        for layer in self.q_net_target_layers:
+            y = layer(x)
+            x = y
+        return self.q_net_target_linear(x) 
     
     def forward(self, state):
         return self.q_net(state)
@@ -90,7 +98,7 @@ class QNetwork():
         q_values = self.q_net(states)
         q_values = torch.gather(q_values, 1, actions.unsqueeze(1)).squeeze(1)
         
-        next_q_values = self.target_q_net(next_states).max(dim=1)
+        next_q_values = self.q_net_target(next_states).max(dim=1)
         
         target = rewards + self.gamma * next_q_values * (1.0 - terminals)
         target = target.detach()
