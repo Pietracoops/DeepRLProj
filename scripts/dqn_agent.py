@@ -5,9 +5,9 @@ from replay_buffer import ReplayBuffer
 
 class DQNAgent():
     
-    def __init__(self, agent_params):
+    def __init__(self, n_iter, agent_params):
         
-        self.q_net = QNetwork(agent_params["q_net"])
+        self.q_net = QNetwork(n_iter, agent_params["q_net"])
         self.replay_buffer = ReplayBuffer(agent_params["size"])
         
         self.epsilon = agent_params["epsilon"]
@@ -45,3 +45,5 @@ class DQNAgent():
                 self.q_net.update_target_network()
         
         self.t += 1
+        
+        return loss

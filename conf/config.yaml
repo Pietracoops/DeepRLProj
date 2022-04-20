@@ -1,5 +1,8 @@
 alg:
     n_iter: 100000
+    
+logger:
+    average_over: 10
 
 agent:
     size: 100000
@@ -8,16 +11,16 @@ agent:
     learning_freq: 1
     target_update_freq: 1
     n_actions: 16
-
-q_net:
-    n_layers: 2
-    input_size: 256
-    output_size: 5
-    n_input_channels: 4
-    n_channels: 16
-    kernel_size: 5
-    stride: 1
-    padding: 1
-    maxpool_kernel_size: 2
-    activation: relu
-    gamma: 0.99
+    
+    q_net:
+        n_layers: 2
+        input_size: 256
+        output_size: 5
+        n_input_channels: 4
+        n_channels: 16
+        kernel_size: 5
+        stride: 1
+        padding: 1
+        maxpool_kernel_size: 2
+        activation: relu
+        gamma: 0.99

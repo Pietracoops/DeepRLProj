@@ -3,22 +3,24 @@ import torch
 
 from robot_arm import RobotArm
 
-def Environment():
+class Environment():
     
     def __init__(self):
         self.arm = RobotArm()
+        self.pause = False
     
     def update(self, action):
         pass
         self.arm.do_action(action)
         #next_state = self.get_state()
         #reward = self.get_reward(self, state, next_state)
-        #terminal = self.get_reward(self, next_state)
+        #terminal = self.get_terminal(self, next_state)
         #return next_state, reward, terminal
         
     def get_reward(self, state, next_state):
         reward = 0.0
         #check gripper sensors, if object between grippers
+        #make arm put object in bin
         #reward = 1.0
         #else if sum(next_state - states) > threshold:
         #reward = 0.5
@@ -33,3 +35,8 @@ def Environment():
         state = None
         #Set state to torch.from_numpy(camera.get_picture()) #returns depth and rgb image
         return state
+    
+    def reset(self):
+        #reset arm and add object back into workspace
+        self.pause = True
+        #input("Continue?")

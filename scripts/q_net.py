@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.nn import utils
 
+from utils import robot_optimizer
+
 _str_to_activation = {
     'relu': nn.ReLU(),
     'tanh': nn.Tanh(),
@@ -18,7 +20,7 @@ def get_size(size, kernel_size, padding, stride):
 
 class QNetwork():
     
-    def __init__(self, net_params):
+    def __init__(self, n_iter, net_params):
         self.n_layers = net_params["n_layers"]
         self.input_size = net_params["input_size"]
         self.output_size = net_params["output_size"]
@@ -33,16 +35,17 @@ class QNetwork():
         
         self.gamma = net_params["gamma"]
         
-        self.grad_norm_clipping = 10
-        self.optimizer = optim.Adam(self.q_net.parameters())
-        self.learning_rate_scheduler = optim.lr_scheduler.LambdaLR(self.optimizer, self.optimizer_spec.learning_rate_schedule)
-        self.loss = nn.SmoothL1Loss()  # AKA Huber loss
-        
         if isinstance(self.activation, str):
             activation = _str_to_activation[self.activation]
         
-        self.q_net_layers, self.q_net_linear = self.build_nn(activation)
-        self.q_net_target_layers, self.q_net_target_linear = self.build_nn(activation)
+        self.q_net = self.build_nn(activation)
+        self.q_net_target = self.build_nn(activation)
+        
+        self.grad_norm_clipping = 10
+        self.optimizer_spec = robot_optimizer(n_iter)
+        self.optimizer = optim.Adam(self.q_net.parameters())
+        self.learning_rate_scheduler = optim.lr_scheduler.LambdaLR(self.optimizer, self.optimizer_spec.learning_rate_schedule)
+        self.loss = nn.SmoothL1Loss()  # AKA Huber loss
         
     def build_nn(self, activation):
         layers = []
@@ -74,22 +77,9 @@ class QNetwork():
 
         size = get_size(size, self.kernel_size, self.padding, self.stride)
         
-        return layers, nn.Linear(size * size * 1, self.output_size * self.output_size)
+        layers.append(nn.Linear(size * size * 1, self.output_size * self.output_size))
         
-    
-    def q_net(self, state):
-        x = state
-        for layer in self.q_net_layers:
-            y = layer(x)
-            x = y
-        return self.q_net_linear(x)
-    
-    def q_net_target(self, state):
-        x = state
-        for layer in self.q_net_target_layers:
-            y = layer(x)
-            x = y
-        return self.q_net_target_linear(x) 
+        return nn.Sequential(*layers)
     
     def forward(self, state):
         return self.q_net(state)
