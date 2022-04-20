@@ -291,6 +291,11 @@ You will first need to enable the robot with the following command
 roslaunch interbotix_xsarm_control xsarm_control.launch robot_model:=vx250
 ```
 
+For the vision modules you will need to run the following line:
+```
+roslaunch interbotix_xsarm_perception xsarm_perception.launch robot_model:=vx250 use_armtag_tuner_gui:=true use_pointcloud_tuner_gui:=true
+```
+
 After you connect the arm you can run the following command to enable or disable the actuators.
 ```
 rosservice call /vx250/torque_enable "{cmd_type: 'group', name: 'all', enable: true}"
