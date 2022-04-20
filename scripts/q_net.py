@@ -21,13 +21,13 @@ class QNetwork():
     def __init__(self, net_params):
         self.n_layers = net_params["n_layers"]
         self.input_size = net_params["input_size"]
+        self.output_size = net_params["output_size"]
         self.n_input_channels = net_params["n_input_channels"]
         self.n_channels = net_params["n_channels"]
         self.kernel_size = net_params["kernel_size"]
         self.stride = net_params["stride"]
         self.padding = net_params["padding"]
         self.maxpool_kernel_size = net_params["maxpool_kernel_size"]
-        self.output_size = net_params["output_size"]
         
         self.activation = net_params["activation"]
         
@@ -74,7 +74,7 @@ class QNetwork():
 
         size = get_size(size, self.kernel_size, self.padding, self.stride)
         
-        return layers, nn.Linear(size * size * 1, self.output_size)
+        return layers, nn.Linear(size * size * 1, self.output_size * self.output_size)
         
     
     def q_net(self, state):
