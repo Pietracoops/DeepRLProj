@@ -1,16 +1,16 @@
 import torch
 
 from q_net import QNetwork
+from replay_buffer import ReplayBuffer
 
 class DQNAgent():
     
     def __init__(self, agent_params):
         
-        self.q_net = QNetwork(agent_params)
-        self.replay_buffer = []
+        self.q_net = QNetwork(agent_params["q_net"])
+        self.replay_buffer = ReplayBuffer(agent_params["size"])
         
         self.epsilon = agent_params["epsilon"]
-        self.batch_size = agent_params["train_batch_size"]
         
         self.learning_starts = agent_params["learning_starts"]
         self.learning_freq = agent_params["learning_freq"]
@@ -28,19 +28,18 @@ class DQNAgent():
         return torch.argmax(self.q_net.forward(state))
     
     def store(self, state, action, next_state, reward, terminal):
-        pass
+        self.replay_buffer.store(state, action, next_state, terminal)
     
     def sample(self):
-        #return states, actions, next_states, rewards, terminal
-        pass
+        return self.replay_buffer.sample(self.batch_size)
     
     def update(self):
         
         if (self.t > self.learning_starts
                 and self.t % self.learning_freq == 0):
 
-            #states, actions, next_states, rewards, terminal = sample()
-            #loss = self.q_net.update(states, actions, next_states, rewards, terminal)
+            states, actions, next_states, rewards, terminals = self.sample()
+            loss = self.q_net.update(states, actions, next_states, rewards, terminals)
 
             if self.num_param_updates % self.target_update_freq == 0:
                 self.q_net.update_target_network()

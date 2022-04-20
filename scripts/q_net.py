@@ -45,7 +45,6 @@ class QNetwork():
         size = self.input_size
         n_channels = self.n_input_channels
         for _ in range(self.n_layers):
-        
             padding = (size- 1) // 2
             layers.append(nn.Conv2d(in_channels=n_channels, 
                                    out_channels=self.n_channels, 
@@ -87,13 +86,13 @@ class QNetwork():
     def forward(self, state):
         return self.q_net(state)
     
-    def update(self, states, actions, next_states, rewards, terminal):
+    def update(self, states, actions, next_states, rewards, terminals):
         q_values = self.q_net(states)
         q_values = torch.gather(q_values, 1, actions.unsqueeze(1)).squeeze(1)
         
         next_q_values = self.target_q_net(next_states).max(dim=1)
         
-        target = rewards + self.gamma * next_q_values * (1.0 - terminal)
+        target = rewards + self.gamma * next_q_values * (1.0 - terminals)
         target = target.detach()
         
         assert q_values.shape == target.shape
