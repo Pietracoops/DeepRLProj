@@ -31,9 +31,9 @@ class Logger:
             
         if self.t > self.logging_starts:
             logs = { } 
-            logs["Average_Rewards"] = np.mean(np.array(self.agent_rewards[-self.n:]))
             logs["Current_Cumulative_Reward"] = self.agent_cumulative_rewards
             if len(self.agent_rewards) > 1:
+                logs["Average_Rewards"] = np.mean(np.array(self.agent_rewards[-self.n:]))
                 logs["Last_Cumulative_Reward"] = self.agent_rewards[-1]
             logs["Loss"] = data["loss"]
             
