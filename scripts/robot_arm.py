@@ -1,11 +1,14 @@
 import numpy as np
 import torch
 
-def RobotArm():
+from pyrobot import Robot
+
+class RobotArm():
     
     def __init__(self):
-        pass
+        self.bot = Robot('locobot')
+        self.bot.camera.reset()
     
     def do_action(self, action):
         pass
-        #robot moves arm according to "action"
+        #robot moves arm in grid according to "action"

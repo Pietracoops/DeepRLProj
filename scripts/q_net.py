@@ -11,12 +11,16 @@ _str_to_activation = {
     'leaky_relu': nn.LeakyReLU(),
     'sigmoid': nn.Sigmoid(),
     'selu': nn.SELU(),
-    'softplus': nn.Softplus(),
-    'identity': nn.Identity(),
+    'softplus': nn.Softplus()
 }
 
 def get_size(size, kernel_size, padding, stride):
     return ((size - kernel_size + padding * 2) // stride) + 1
+
+class Flatten(torch.nn.Module):
+    def forward(self, x):
+        batch_size = x.shape[0]
+        return x.view(batch_size, -1)
 
 class QNetwork():
     
@@ -54,10 +58,10 @@ class QNetwork():
         out_n_channels = self.n_channels
         for _ in range(self.n_layers - 1):
             layers.append(nn.Conv2d(in_channels=in_n_channels, 
-                                                out_channels=out_n_channels, 
-                                                kernel_size=self.kernel_size,  
-                                                stride=self.stride, 
-                                                padding=self.padding))
+                                    out_channels=out_n_channels, 
+                                    kernel_size=self.kernel_size,  
+                                    stride=self.stride, 
+                                    padding=self.padding))
             
             size = get_size(size, self.kernel_size, self.padding, self.stride)
             
@@ -70,13 +74,14 @@ class QNetwork():
             out_n_channels = self.n_channels
             
         layers.append(nn.Conv2d(in_channels=out_n_channels, 
-                                            out_channels=1, 
-                                            kernel_size=self.kernel_size,  
-                                            stride=self.stride, 
-                                            padding=self.padding))
+                                out_channels=1, 
+                                kernel_size=self.kernel_size,  
+                                stride=self.stride, 
+                                padding=self.padding))
 
         size = get_size(size, self.kernel_size, self.padding, self.stride)
         
+        layers.append(Flatten())
         layers.append(nn.Linear(size * size * 1, self.output_size * self.output_size))
         
         return nn.Sequential(*layers)

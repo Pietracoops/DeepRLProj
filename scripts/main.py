@@ -15,7 +15,10 @@ def import_config():
     return config
 
 def run_training_loop(config, env, agent, logger):
-    env.reset()
+    #state = env.get_state()
+    #action = agent.get_action(state)
+    #print("Action: {}".format(action))
+    
     for i in range(config["alg"]["n_iter"]):
         state = env.get_state()
         action = agent.get_action(state)
@@ -37,7 +40,7 @@ def run_training_loop(config, env, agent, logger):
 config = import_config()
 print("Config: {}".format(config))
 
-env = Environment()
+env = Environment(config["env"])
 agent = DQNAgent(config["alg"]["n_iter"], config["agent"])
 logger = Logger(config, "../log/" + time.strftime("%d-%m-%Y_%H-%M-%S"))
 
