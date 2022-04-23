@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 
+from utils import to_device
+
 class ReplayBuffer():
     
     def __init__(self, size):
@@ -37,4 +39,10 @@ class ReplayBuffer():
     
     def sample(self, batch_size):
         indices = np.random.randint(0, self.current_size, size=batch_size)
-        return self.states[indices], self.actions[indices], self.next_states[indices], self.rewards[indices], self.terminal[indices]
+
+        states      = to_device(torch.cat([self.states[i] for i in indices], dim=0))
+        actions     = to_device(torch.tensor([self.actions[i] for i in indices], dtype=torch.long))
+        next_states = to_device(torch.cat([self.next_states[i] for i in indices], dim=0))
+        rewards     = to_device(torch.tensor([self.rewards[i] for i in indices], dtype=torch.float32))
+        terminals   = to_device(torch.tensor([self.terminals[i] for i in indices], dtype=torch.float32))
+        return states, actions, next_states, rewards, terminals

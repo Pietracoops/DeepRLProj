@@ -29,20 +29,27 @@ class Logger:
             index = self.n * 2
             self.agent_rewards[-index:]
             
+        logs = { } 
+        logs["Current_Cumulative_Reward"] = self.agent_cumulative_rewards
         if self.t > self.logging_starts:
-            logs = { } 
-            logs["Current_Cumulative_Reward"] = self.agent_cumulative_rewards
             if len(self.agent_rewards) > 1:
                 logs["Average_Rewards"] = np.mean(np.array(self.agent_rewards[-self.n:]))
                 logs["Last_Cumulative_Reward"] = self.agent_rewards[-1]
-            logs["Loss"] = data["loss"]
+            if data["update_logs"] is not None:
+                logs["Push_Network_Loss"] = data["update_logs"]["push_network"]["loss"]
+                logs["Push_Network_Q_Values"] = data["update_logs"]["push_network"]["q_values"]
+                logs["Push_Network_Q_Targets"] = data["update_logs"]["push_network"]["target_q_values"]
+
+                logs["Grasp_Network_Loss"] = data["update_logs"]["grasp_network"]["loss"]
+                logs["Grasp_Network_Q_Values"] = data["update_logs"]["grasp_network"]["q_values"]
+                logs["Grasp_Network_Q_Targets"] = data["update_logs"]["grasp_network"]["target_q_values"]
             
-            for key, value in logs.items():
-                print('{} : {}'.format(key, value))
-                self.log_scalar(value, key, self.t)
-            print('Done logging...\n\n')
+        for key, value in logs.items():
+            print('{} : {}'.format(key, value))
+            self.log_scalar(value, key, self.t)
+        print('Done logging...\n\n')
             
-            self.flush()
+        self.flush()
         
         self.t += 1
         

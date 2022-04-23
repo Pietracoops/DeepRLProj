@@ -1,6 +1,19 @@
 from collections import namedtuple
 
+import torch
 import torch.optim as optim
+
+def set_device(config):
+    global device
+    if torch.cuda.is_available() and config["alg"]["use_gpu"]:
+        device = torch.device("cuda:" + "0")
+        print("Using GPU id {}".format(0))
+    else:
+        device = torch.device("cpu")
+        print("GPU not detected. Defaulting to CPU.")
+
+def to_device(x):
+    return x.to(device)
 
 # Copied from HW4
 OptimizerSpec = namedtuple(

@@ -2,6 +2,10 @@ import numpy as np
 import torch
 
 from robot_arm import RobotArm
+from pyrobot.utils.util import try_cv2_import
+cv2 = try_cv2_import()
+
+from utils import to_device
 
 class Environment():
     
@@ -12,15 +16,18 @@ class Environment():
 
         self.t = 0
         self.max_timesteps = config["max_timesteps"]
+        self.current_state = None
         self.reset()
     
     def update(self, action):
-        self.t += 1
         self.arm.do_action(action)
         next_state = self.get_state()
-        #reward = self.get_reward(self, state, next_state)
-        #terminal = self.get_terminal(self, next_state)
-        #return next_state, reward, terminal
+        reward = self.get_reward(self.current_state, next_state)
+        terminal = self.is_terminal(next_state)
+
+        self.current_state = next_state
+        self.t += 1
+        return next_state, reward, terminal
         
     def get_reward(self, state, next_state):
         reward = 0.0
@@ -31,7 +38,7 @@ class Environment():
         #reward = 0.5
         return reward
     
-    def get_terminal(self, next_state):
+    def is_terminal(self, next_state):
         terminal = 0.0
         if self.t > self.max_timesteps:
             terminal = 1.0
@@ -45,14 +52,10 @@ class Environment():
         size = np.minimum(x, y)
         rgb = rgb[:size, :size, :]
         depth = depth[:size, :size, np.newaxis]
-        print("rgb: {} depth: {}".format(type(rgb), type(depth)))
-        print("rgb: {} depth: {}".format(rgb.shape, depth.shape))
 
-        state = torch.from_numpy(np.concatenate((rgb, depth), axis=2))
+        state = to_device(torch.from_numpy(np.concatenate((rgb, depth), axis=2)))
         H, W, C = state.shape
         state = state.reshape(C, H, W).unsqueeze(0)
-        print("state: {}".format(type(state)))
-        print("state: {}".format(state.shape))
         return state
     
     def reset(self):
@@ -60,3 +63,4 @@ class Environment():
         #move the arm back to default position
         #We place blocks back in the workspace
         #input("Continue?")
+        self.current_state = self.get_state()
