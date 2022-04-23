@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 import torch
 
 from q_net import QNetwork
@@ -12,6 +13,7 @@ class DQNAgent():
         self.q_net_grasp = copy.copy(self.q_net_push)
 
         self.n_actions = self.q_net_push.output_size
+        print("Output image size: {}".format(np.sqrt(self.n_actions)))
         print("Size of action space: {}".format(self.n_actions))
 
         self.push_replay_buffer = ReplayBuffer(agent_params["size"])

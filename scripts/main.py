@@ -1,4 +1,5 @@
 import gc
+import sys
 import time
 import yaml
 
@@ -10,9 +11,12 @@ from dqn_agent import DQNAgent
 from environment import Environment
 from logger import Logger
 
-def import_config():
-    #with open("../conf/test_config.yaml", "r") as stream:
-    with open("../conf/config.yaml", "r") as stream:
+def import_config(option):
+    path = "../conf/config.yaml"
+    if option == '1':
+        path = "../conf/test_config.yaml"
+
+    with open(path, "r") as stream:
         try:
             config = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
@@ -45,7 +49,11 @@ def run_training_loop(config, env, agent, logger):
             gc.collect()
             torch.cuda.empty_cache()
 
-config = import_config()
+option = None
+if len(sys.argv) > 1:
+    option = sys.argv[1]
+
+config = import_config(option)
 print("Config: {}".format(config))
 
 utils.set_device(config)
@@ -54,4 +62,5 @@ env = Environment(config["env"])
 agent = DQNAgent(config["alg"]["n_iter"], config["agent"])
 logger = Logger(config, "../log/" + time.strftime("%d-%m-%Y_%H-%M-%S"))
 
-run_training_loop(config, env, agent, logger)
+if option is not None:
+    run_training_loop(config, env, agent, logger)
