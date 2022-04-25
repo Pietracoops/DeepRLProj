@@ -44,8 +44,9 @@ class DDPGActor():
         self.actor_net = to_device(self.build_nn())
         self.actor_net_target = to_device(self.build_nn())
         
+        self.lr = net_params["lr"]
         self.grad_norm_clipping = net_params["grad_norm_clipping"]
-        self.optimizer = optim.Adam(self.actor_net.parameters())
+        self.optimizer = optim.Adam(self.actor_net.parameters(), lr=self.lr)
         
     def build_nn(self):
         if isinstance(self.activation, str):

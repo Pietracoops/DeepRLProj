@@ -20,17 +20,19 @@ class Environment():
         self.reset()
     
     def update(self, action):
-        self.arm.do_action(action)
+        result = self.arm.do_action(action)
         next_state = self.get_state()
-        reward = self.get_reward(self.current_state, next_state)
+        reward = self.get_reward(result)
         terminal = self.is_terminal(next_state)
 
         self.current_state = next_state
         self.t += 1
         return next_state, reward, terminal
         
-    def get_reward(self, state, next_state):
+    def get_reward(self, result):
         reward = 0.0
+        if not result:
+            reward = -1.0
         #check gripper sensors, if object between grippers
         #make arm put object in bin
         #reward = 1.0
@@ -43,7 +45,6 @@ class Environment():
         return terminal
     
     def get_state(self):
-        #Set state to torch.from_numpy(camera.get_picture()) #returns depth and rgb image
         rgb, depth = self.arm.bot.camera.get_rgb_depth()
 
         x, y = depth.shape

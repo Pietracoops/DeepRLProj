@@ -52,6 +52,7 @@ ddpg_agent:
         size: 32
         activation: relu
         gamma: 0.99
+        lr: 0.0001
         grad_norm_clipping: 10
 
     actor_net:
@@ -66,4 +67,5 @@ ddpg_agent:
       size: 32
       activation: relu
       gamma: 0.99
+      lr: 0.0001
       grad_norm_clipping: 10

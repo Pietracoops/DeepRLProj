@@ -71,8 +71,9 @@ class DDPGCritic():
         self.q_net = CriticNetwork(net_params)
         self.q_net_target = CriticNetwork(net_params)
         
+        self.lr = net_params["lr"]
         self.grad_norm_clipping = net_params["grad_norm_clipping"]
-        self.optimizer = optim.Adam([{'params': self.q_net.fcn.parameters()}, {'params': self.q_net.mlp.parameters()}])
+        self.optimizer = optim.Adam([{'params': self.q_net.fcn.parameters()}, {'params': self.q_net.mlp.parameters()}], lr=self.lr)
         self.loss = nn.SmoothL1Loss()  # AKA Huber loss
     
     def forward(self, state, action):
