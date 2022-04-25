@@ -53,11 +53,11 @@ class DQNAgent():
             self.grasp_replay_buffer.store(state, action[1], next_state, reward, terminal)
     
     def sample_push_buffer(self):
-        states, actions, next_states, rewards, terminals = self.push_replay_buffer.sample(self.batch_size)
+        states, actions, next_states, rewards, terminals = self.push_replay_buffer.sample_dqn(self.batch_size)
         return states, actions, next_states, rewards, terminals
 
     def sample_grasp_buffer(self):
-        states, actions, next_states, rewards, terminals = self.grasp_replay_buffer.sample(self.batch_size)
+        states, actions, next_states, rewards, terminals = self.grasp_replay_buffer.sample_dqn(self.batch_size)
         return states, actions, next_states, rewards, terminals
     
     def update(self):
@@ -74,11 +74,16 @@ class DQNAgent():
             states, actions, next_states, rewards, terminals = self.sample_grasp_buffer()
             logs["grasp_network"] = self.q_net_grasp.update(states, actions, next_states, rewards, terminals)
 
+            del states
+            del actions
+            del next_states
+            del rewards
+            del terminals
+
             self.num_param_updates += 1
             if self.num_param_updates % self.target_update_freq == 0:
                 self.q_net_push.update_target_network()
                 self.q_net_grasp.update_target_network()
-
-            return logs
         
         self.t += 1
+        return logs

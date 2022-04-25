@@ -2,6 +2,7 @@ alg:
     n_iter: 1000
     flush_frequency: 100
     use_gpu: True
+    agent: ddpg
 
 env:
     threshold: 0.1
@@ -10,7 +11,7 @@ env:
 logger:
     average_over: 10
 
-agent:
+dqn_agent:
     size: 100000
     epsilon: 0.5
     learning_starts: 10
@@ -30,3 +31,39 @@ agent:
         gamma: 0.99
         grad_norm_clipping: 10
         alg: ddqn
+
+ddpg_agent:
+    size: 100000
+    noise: 0.5
+    learning_starts: 10
+    learning_freq: 1
+    target_update_freq: 4
+    batch_size: 4
+    
+    q_net:
+        n_conv_layers: 3
+        input_size: 480
+        n_input_channels: 4
+        n_channels: 4
+        kernel_size: 3
+        stride: 2
+        padding: 1
+        n_linear_layers: 2
+        size: 32
+        activation: relu
+        gamma: 0.99
+        grad_norm_clipping: 10
+
+    actor_net:
+      n_conv_layers: 3
+      input_size: 480
+      n_input_channels: 4
+      n_channels: 4
+      kernel_size: 3
+      stride: 2
+      padding: 1
+      n_linear_layers: 0
+      size: 32
+      activation: relu
+      gamma: 0.99
+      grad_norm_clipping: 10

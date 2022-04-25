@@ -37,11 +37,21 @@ class ReplayBuffer():
             
             self.index += 1
     
-    def sample(self, batch_size):
+    def sample_dqn(self, batch_size):
         indices = np.random.randint(0, self.current_size, size=batch_size)
 
         states      = to_device(torch.cat([self.states[i] for i in indices], dim=0))
         actions     = to_device(torch.tensor([self.actions[i] for i in indices], dtype=torch.long))
+        next_states = to_device(torch.cat([self.next_states[i] for i in indices], dim=0))
+        rewards     = to_device(torch.tensor([self.rewards[i] for i in indices], dtype=torch.float32))
+        terminals   = to_device(torch.tensor([self.terminals[i] for i in indices], dtype=torch.float32))
+        return states, actions, next_states, rewards, terminals
+
+    def sample_ddpg(self, batch_size):
+        indices = np.random.randint(0, self.current_size, size=batch_size)
+
+        states      = to_device(torch.cat([self.states[i] for i in indices], dim=0))
+        actions     = to_device(torch.tensor([self.actions[i] for i in indices], dtype=torch.float32))
         next_states = to_device(torch.cat([self.next_states[i] for i in indices], dim=0))
         rewards     = to_device(torch.tensor([self.rewards[i] for i in indices], dtype=torch.float32))
         terminals   = to_device(torch.tensor([self.terminals[i] for i in indices], dtype=torch.float32))

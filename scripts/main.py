@@ -8,6 +8,7 @@ import torch
 import utils
 
 from dqn_agent import DQNAgent
+from ddpg_agent import DDPGAgent
 from environment import Environment
 from logger import Logger
 
@@ -45,9 +46,16 @@ def run_training_loop(config, env, agent, logger):
         if terminal == 1.0:
             env.reset()
 
+        del state
+        del action
+        del next_state
+        del reward
+        del terminal
+        del data
+        torch.cuda.empty_cache()
+
         if i % config["alg"]["flush_frequency"] == 0:
             gc.collect()
-            torch.cuda.empty_cache()
 
 option = None
 if len(sys.argv) > 1:
@@ -59,8 +67,15 @@ print("Config: {}".format(config))
 utils.set_device(config)
 
 env = Environment(config["env"])
-agent = DQNAgent(config["alg"]["n_iter"], config["agent"])
-logger = Logger(config, "../log/" + time.strftime("%d-%m-%Y_%H-%M-%S"))
+
+if config["alg"]["agent"] == "dqn":
+    agent = DQNAgent(config["alg"]["n_iter"], config["dqn_agent"])
+elif config["alg"]["agent"] == "ddpg":
+    agent = DDPGAgent(config["alg"]["n_iter"], config["ddpg_agent"])
+else:
+    raise NotImplementedError 
+
+logger = Logger(config, agent, "../log/" + time.strftime("%d-%m-%Y_%H-%M-%S"))
 
 if option is not None:
     run_training_loop(config, env, agent, logger)

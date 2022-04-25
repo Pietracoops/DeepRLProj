@@ -34,8 +34,6 @@ class Environment():
         #check gripper sensors, if object between grippers
         #make arm put object in bin
         #reward = 1.0
-        #else if sum(next_state - states) > threshold:
-        #reward = 0.5
         return reward
     
     def is_terminal(self, next_state):
@@ -51,7 +49,7 @@ class Environment():
         x, y = depth.shape
         size = np.minimum(x, y)
         rgb = rgb[:size, :size, :]
-        depth = depth[:size, :size, np.newaxis]
+        depth = depth[:size, :size, np.newaxis] * 1000.0
 
         state = to_device(torch.from_numpy(np.concatenate((rgb, depth), axis=2)))
         H, W, C = state.shape
