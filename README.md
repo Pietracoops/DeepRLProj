@@ -354,3 +354,15 @@ https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/quickstart.
 
 Lab tech
 http://www-labs.iro.umontreal.ca/~lokbani/
+
+
+## Setting up the Block World
+In order to setup gazebo to launch from the same world every time the following steps need to be followed
+
+- Navigate to the directory /home/*user*/low_cost_ws/src/pyrobot/robots/LoCoBot/locobot_gazebo/worlds and place the block_world.world file in there.
+- Next we want to navigate to the file /home/massimo/low_cost_ws/src/pyrobot/robots/LoCoBot/locobot_gazebo/launch/empty_world.launch and modify the world name to contain our newly imported world file.
+
+```
+<arg name="world_name" default="$(find locobot_gazebo)/worlds/block_world.world"/> <!-- Note: the world_name is with respect to GAZEBO_RESOURCE_PATH environmental variable -->
+ 
+```

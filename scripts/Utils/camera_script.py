@@ -1,19 +1,41 @@
-import cv2
-import imageio
 import numpy as np
-import pyrealsense2 as rs
 import os
-import shutil
-
 import math
-from interbotix_xs_modules.arm import InterbotixManipulatorXS
 import time
-import colorsys
-from interbotix_common_modules import angle_manipulation as ang
-from interbotix_xs_modules.arm import InterbotixManipulatorXS
-from interbotix_perception_modules.armtag import InterbotixArmTagInterface
-from interbotix_perception_modules.pointcloud import InterbotixPointCloudInterface
 
+# import colorsys
+# import pyrealsense2 as rs
+# import shutil
+# import cv2
+# import imageio
+# from interbotix_xs_modules.arm import InterbotixManipulatorXS
+# from interbotix_common_modules import angle_manipulation as ang
+# from interbotix_xs_modules.arm import InterbotixManipulatorXS
+# from interbotix_perception_modules.armtag import InterbotixArmTagInterface
+# from interbotix_perception_modules.pointcloud import InterbotixPointCloudInterface
+
+
+#empty_world.launch ---> gazebo_locobot.launch -----> main.launch
+
+# ===================================================================
+#                        INSTRUCTIONS
+# ===================================================================
+
+# USE THIS COMMAND FOR ENV TO LAUNCH SCRIPTS
+#   load_pyrobot_env
+
+# RUN THIS COMMAND RAW DOG 
+#  roslaunch locobot_control main.launch use_arm:=true use_sim:=true teleop:=true use_camera:=true use_base:=true
+
+# ===================================================================
+
+
+
+
+# Simulation stuff
+from pyrobot import Robot
+from pyrobot.utils.util import try_cv2_import
+import inspect
 
 # Robot Limits
 
@@ -69,7 +91,6 @@ def make_clean_folder(path_folder):
         else:
             exit()
 
-
 def record_rgbd(store):
     pipeline = rs.pipeline()
 
@@ -124,7 +145,6 @@ def record_rgbd(store):
         pipeline.stop()
 
     return color_image, depth_image
-
 
 def get_position():
     # Initialization
@@ -234,11 +254,132 @@ def get_rpy():
     print("==========================================")
     print("RPY: {}".format(rpy))
 
+def run_4corner_sim():
+        # Example poses
+    target_poses = [
+        {   "position": np.array([0.1, -0.2, 0.2]), 
+            "pitch": np.pi/2, 
+            "numerical": False
+        },
+        {    "position": np.array([0.40, -0.20, 0.2]), 
+            "pitch": np.pi/2, 
+            "numerical": False
+        },
+        {
+            "position": np.array([0.40, 0.20, 0.2]),
+            "pitch": np.pi/2,
+            "numerical": False,
+        },
+        {
+            "position": np.array([0.1, 0.2, 0.2]),
+            "pitch": np.pi/2,
+            "numerical": False,
+        },
+    ]
+
+    bot = Robot("locobot")
+    bot.arm.go_home()
+
+    for pose in target_poses:
+        bot.arm.set_ee_pose_pitch_roll(**pose)
+        time.sleep(1)
+
+    bot.arm.go_home()
+
+    r = 0
+    c = 0
+
+    bot.camera.set_tilt(0.6)
+    time.sleep(1)
+    cv2 = try_cv2_import()
+    rgb = bot.camera.get_rgb()
+    cv2.imshow('Color', rgb[:, :, ::-1])
+    cv2.waitKey(10000)
+
+
+    pt, color = bot.camera.pix_to_3dpt(r,c)
+    for p in pt:
+        pose = {"position":p, 
+                "pitch": np.pi/2,
+                "numerical": False,}
+        print('3D point:', p)
+        bot.arm.set_ee_pose_pitch_roll(**pose)
+
+
+def robot_move_from_cam_vision(bot):
+    target_poses = [
+        {   "position": np.array([0.1, 0.35, 0.2]), 
+            "pitch": np.pi/2, 
+            "numerical": False
+        }
+    ]
+
+    for pose in target_poses:
+        bot.arm.set_ee_pose_pitch_roll(**pose)
+        time.sleep(1)
+
+def run_pic_coordinates_sim():
+    bot = Robot("locobot")
+    bot.camera.reset()
+    bot.arm.go_home()
+    cv2 = try_cv2_import()
+    
+    
+    target_poses = [
+        {   "position": np.array([0.1, 0.37, 0.2]),
+            "pitch": np.pi/2, 
+            "numerical": False
+        }
+    ]
+
+        # {   "position": np.array([0.45, -0.12, 0.21]), 
+        #     "pitch": np.pi/2, 
+        #     "numerical": False
+        # }
+
+    for pose in target_poses:
+        bot.arm.set_ee_pose_pitch_roll(**pose)
+        time.sleep(1)
+
+    #robot_move_from_cam_vision(bot)
+    
+    
+
+    r = [338]
+    c = [440]
+
+    bot.camera.set_tilt(0.75)
+
+    time.sleep(1)
+
+
+    print(inspect.getfile(bot.camera.pix_to_3dpt))
+    pt, color = bot.camera.pix_to_3dpt(r,c)
+    print('3D point:', pt)
+    print('Color:', color)
+
+    print("massimo")
+    for p in pt:
+        pose = {"position":p, "pitch": np.pi/2, "numerical": False,}
+        print('3D point:', p)
+        bot.arm.set_ee_pose_pitch_roll(**pose)
+
+    
+    rgb, depth = bot.camera.get_rgb_depth()
+    cv2.imshow('Color', rgb[:, :, ::-1])
+    cv2.imshow('Depth', 1000*depth)
+    print("Depth at 338-440 = {}".format(depth[338][440]))
+
+    file.close
+    cv2.waitKey(100000000)
+
 if __name__ == "__main__":
 
     # Function to get RGB and Depth image
     #color_image, depth_image = record_rgbd(store=False)
     
-    robo_magic()
+    #robo_magic()
     #get_position()
     #get_rpy()
+    #run_sim()
+    run_pic_coordinates_sim()
