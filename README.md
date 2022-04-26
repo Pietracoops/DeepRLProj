@@ -367,3 +367,4 @@ In order to setup gazebo to launch from the same world every time the following 
 <arg name="world_name" default="$(find locobot_gazebo)/worlds/block_world.world"/> <!-- Note: the world_name is with respect to GAZEBO_RESOURCE_PATH environmental variable -->
  
 ```
+ - We want to fix the robot in place, to do so copy the files locobot_description.urdf into the following directory (make a backup of the existing one in case you want to revert) /home/massimo/low_cost_ws/src/pyrobot/robots/LoCoBot/locobot_description/urdf/interbotix_locobot_description.urdf
