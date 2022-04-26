@@ -29,15 +29,15 @@ class DDPGAgent():
     
     def get_action(self, state):
         perform_random_action = np.random.uniform(-self.noise, self.noise)
-        action = self.actor.forward(state) + perform_random_action
+        action = self.actor.forward(state[0], state[1]) + perform_random_action
         return action
     
     def store(self, state, action, next_state, reward, terminal):
         self.replay_buffer.store(state, action, next_state, reward, terminal)
     
     def sample(self):
-        states, actions, next_states, rewards, terminals = self.replay_buffer.sample_ddpg(self.batch_size)
-        return states, actions, next_states, rewards, terminals
+        states, arm_states, actions, next_states, next_arm_states, rewards, terminals = self.replay_buffer.sample_ddpg(self.batch_size)
+        return states, arm_states, actions, next_states, next_arm_states, rewards, terminals
 
     def update(self):
         logs = { }
@@ -46,9 +46,9 @@ class DDPGAgent():
             self.replay_buffer.current_size > self.batch_size
             ):
 
-            states, actions, next_states, rewards, terminals = self.sample()
-            logs["critic"] = self.critic.update(states, actions, next_states, rewards, terminals, self.actor)
-            logs["actor"] = self.actor.update(states, self.critic)
+            states, arm_states, actions, next_states, next_arm_states, rewards, terminals = self.sample()
+            logs["critic"] = self.critic.update(states, arm_states, actions, next_states, next_arm_states, rewards, terminals, self.actor)
+            logs["actor"] = self.actor.update(states, next_arm_states, self.critic)
 
             del states
             del actions
@@ -63,4 +63,3 @@ class DDPGAgent():
 
         self.t += 1 
         return logs
-        

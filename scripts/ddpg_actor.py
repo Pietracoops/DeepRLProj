@@ -18,83 +18,80 @@ _str_to_activation = {
 def get_size(size, kernel_size, padding, stride):
     return ((size - kernel_size + padding * 2) // stride) + 1
 
-class Flatten(torch.nn.Module):
-    def forward(self, x):
-        batch_size = x.shape[0]
-        return x.view(batch_size, -1)
+class ActorNetwork():
+    def __init__(self, net_params):
+        if isinstance(net_params["activation"], str):
+            activation = _str_to_activation[net_params["activation"]]
+
+        conv_layers = []
+        size = net_params["input_size"]
+        in_n_channels = net_params["n_input_channels"]
+        out_n_channels = net_params["n_channels"]
+        for _ in range(net_params["n_conv_layers"]):
+            conv_layers.append(to_device(nn.Conv2d(in_channels=in_n_channels, 
+                                    out_channels=out_n_channels, 
+                                    kernel_size=net_params["kernel_size"],  
+                                    stride=net_params["stride"], 
+                                    padding=net_params["padding"])))
+            
+            size = get_size(size, net_params["kernel_size"], net_params["padding"], net_params["stride"])
+            
+            conv_layers.append(to_device(activation))
+            
+            in_n_channels = net_params["n_channels"]
+            out_n_channels = net_params["n_channels"]
+
+        self.fcn = to_device(nn.Sequential(*conv_layers))
+
+        linear_layers = []
+        # Add Joint angles (5) + status of gripper (1)
+        linear_layers.append(to_device(nn.Linear(size * size * out_n_channels + 5 + 1, net_params["size"])))
+        linear_layers.append(to_device(activation))
+
+        for _ in range(net_params["n_linear_layers"]):
+            linear_layers.append(to_device(nn.Linear(net_params["size"], net_params["size"])))
+            linear_layers.append(to_device(activation))
+
+        linear_layers.append(to_device(nn.Linear(net_params["size"], 1)))
+
+        self.mlp = to_device(nn.Sequential(*linear_layers))
+
+    def forward(self, x0, x1):
+        x = self.fcn(x0)
+
+        x = torch.flatten(x, 1)
+        x = torch.cat((x, x1), dim=1)
+
+        x = self.mlp(x)
+        return x
 
 class DDPGActor():
     
     def __init__(self, net_params):
-        self.n_conv_layers = net_params["n_conv_layers"]
-        self.input_size = net_params["input_size"]
-        self.n_input_channels = net_params["n_input_channels"]
-        self.n_channels = net_params["n_channels"]
-        self.kernel_size = net_params["kernel_size"]
-        self.stride = net_params["stride"]
-        self.padding = net_params["padding"]
-        
-        self.activation = net_params["activation"]
-
-        self.size = net_params["size"]
-        self.n_linear_layers = net_params["n_linear_layers"]
-        
-        self.gamma = net_params["gamma"]
-        
-        self.actor_net = to_device(self.build_nn())
-        self.actor_net_target = to_device(self.build_nn())
+        self.actor_net = ActorNetwork(net_params)
+        self.actor_net_target = ActorNetwork(net_params)
         
         self.lr = net_params["lr"]
         self.grad_norm_clipping = net_params["grad_norm_clipping"]
-        self.optimizer = optim.Adam(self.actor_net.parameters(), lr=self.lr)
-        
-    def build_nn(self):
-        if isinstance(self.activation, str):
-            activation = _str_to_activation[self.activation]
-
-        layers = []
-        size = self.input_size
-        in_n_channels = self.n_input_channels
-        out_n_channels = self.n_channels
-        for _ in range(self.n_conv_layers):
-            layers.append(nn.Conv2d(in_channels=in_n_channels, 
-                                    out_channels=out_n_channels, 
-                                    kernel_size=self.kernel_size,  
-                                    stride=self.stride, 
-                                    padding=self.padding))
-            
-            size = get_size(size, self.kernel_size, self.padding, self.stride)
-            
-            layers.append(activation)
-            
-            in_n_channels = self.n_channels
-            out_n_channels = self.n_channels
-
-        layers.append(Flatten())
-        layers.append(nn.Linear(size * size * out_n_channels, self.size))
-        layers.append(activation)
-
-        for _ in range(self.n_linear_layers):
-            layers.append(nn.Linear(self.size, self.size))
-            layers.append(activation)
-
-        layers.append(nn.Linear(self.size, 1))
-        
-        return nn.Sequential(*layers)
+        self.optimizer = optim.Adam([{'params': self.actor_net.fcn.parameters()}, {'params': self.actor_net.mlp.parameters()}], lr=self.lr)
     
-    def forward(self, state):
-        return self.actor_net(state).detach()
+    def forward(self, state, arm_state):
+        return self.actor_net.forward(state, arm_state).detach()
     
-    def update(self, states, critic):
-        actions = self.actor_net(states)
-        loss = torch.neg(critic.q_net.forward(states, actions)).mean()
+    def update(self, states, arm_states, critic):
+        actions = self.actor_net.forward(states, arm_states)
+        loss = torch.neg(critic.q_net.forward(states, arm_states, actions)).mean()
         
         self.optimizer.zero_grad()
         loss.backward()
-        utils.clip_grad_value_(self.actor_net.parameters(), self.grad_norm_clipping)
+        utils.clip_grad_value_(self.actor_net.fcn.parameters(), self.grad_norm_clipping)
+        utils.clip_grad_value_(self.actor_net.mlp.parameters(), self.grad_norm_clipping)
         self.optimizer.step()
         return { "loss": loss.item(), "actions": torch.mean(actions).item() }
         
     def update_target_network(self):
-        for target_param, param in zip(self.actor_net_target.parameters(), self.actor_net.parameters()):
+        for target_param, param in zip(self.actor_net_target.fcn.parameters(), self.actor_net.fcn.parameters()):
+            target_param.data.copy_(param.data)
+
+        for target_param, param in zip(self.actor_net_target.mlp.parameters(), self.actor_net.mlp.parameters()):
             target_param.data.copy_(param.data)

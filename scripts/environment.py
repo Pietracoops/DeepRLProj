@@ -12,10 +12,11 @@ class Environment():
     def __init__(self, config):
         self.arm = RobotArm()
 
-        self.threshold = config["threshold"]
+        self.agent = config["alg"]["agent"]
+        self.threshold = config["env"]["threshold"]
 
         self.t = 0
-        self.max_timesteps = config["max_timesteps"]
+        self.max_timesteps = config["env"]["max_timesteps"]
         self.current_state = None
         self.reset()
     
@@ -33,9 +34,9 @@ class Environment():
         reward = 0.0
         if not result:
             reward = -1.0
-        #check gripper sensors, if object between grippers
-        #make arm put object in bin
-        #reward = 1.0
+        if self.arm.bot.gripper.get_gripper_state() == 2:
+            #make arm put object in bin
+            reward = 1.0
         return reward
     
     def is_terminal(self, next_state):
@@ -55,11 +56,16 @@ class Environment():
         state = to_device(torch.from_numpy(np.concatenate((rgb, depth), axis=2)))
         H, W, C = state.shape
         state = state.reshape(C, H, W).unsqueeze(0)
-        return state
+
+        if self.agent == "dqn":
+            return state, None
+
+        arm_state = self.arm.bot.arm.get_joint_angles()     
+        gripper_state = self.arm.bot.gripper.get_gripper_state()
+        arm_state = to_device(torch.from_numpy(np.append(arm_state, gripper_state)))
+        arm_state = arm_state.float().unsqueeze(0)
+        return state, arm_state
     
     def reset(self):
         self.t = 0
-        #move the arm back to default position
-        #We place blocks back in the workspace
-        #input("Continue?")
         self.current_state = self.get_state()

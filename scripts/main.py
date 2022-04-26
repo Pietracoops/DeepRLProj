@@ -66,7 +66,7 @@ print("Config: {}".format(config))
 
 utils.set_device(config)
 
-env = Environment(config["env"])
+env = Environment(config)
 
 if config["alg"]["agent"] == "dqn":
     agent = DQNAgent(config["alg"]["n_iter"], config["dqn_agent"])

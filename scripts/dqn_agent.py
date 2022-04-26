@@ -34,11 +34,11 @@ class DQNAgent():
         if random < self.epsilon:
             return torch.randint(0, 1, size=(1,)).item(), torch.randint(0, self.n_actions, size=(1,)).item()
         
-        push_q_values = self.q_net_push.forward(state).squeeze(0)
+        push_q_values = self.q_net_push.forward(state[0]).squeeze(0)
         push_argmax = torch.argmax(push_q_values)
         push_max = torch.max(push_q_values)
 
-        grasp_q_values = self.q_net_grasp.forward(state).squeeze(0)
+        grasp_q_values = self.q_net_grasp.forward(state[0]).squeeze(0)
         grasp_argmax = torch.argmax(grasp_q_values)
         grasp_max = torch.max(grasp_q_values)
 

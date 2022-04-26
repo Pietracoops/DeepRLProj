@@ -50,7 +50,7 @@ ddpg_agent:
         padding: 1
         n_linear_layers: 2
         size: 32
-        activation: relu
+        activation: tanh
         gamma: 0.99
         lr: 0.0001
         grad_norm_clipping: 10
@@ -63,9 +63,8 @@ ddpg_agent:
       kernel_size: 3
       stride: 2
       padding: 1
-      n_linear_layers: 0
+      n_linear_layers: 2
       size: 32
-      activation: relu
-      gamma: 0.99
-      lr: 0.0001
+      activation: tanh
+      lr: 0.00002
       grad_norm_clipping: 10

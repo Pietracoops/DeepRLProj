@@ -44,7 +44,8 @@ class CriticNetwork():
         self.fcn = to_device(nn.Sequential(*conv_layers))
 
         linear_layers = []
-        linear_layers.append(to_device(nn.Linear(size * size * out_n_channels + 1, net_params["size"])))
+        # Add Joint angles (5) + status of gripper (1) + action (1)
+        linear_layers.append(to_device(nn.Linear(size * size * out_n_channels + 5 + 1 + 1, net_params["size"])))
         linear_layers.append(to_device(activation))
 
         for _ in range(net_params["n_linear_layers"]):
@@ -55,11 +56,11 @@ class CriticNetwork():
 
         self.mlp = to_device(nn.Sequential(*linear_layers))
 
-    def forward(self, x, a):
-        x = self.fcn(x)
+    def forward(self, x0, x1, a):
+        x = self.fcn(x0)
 
         x = torch.flatten(x, 1)
-        x = torch.cat((x, a.view(-1, 1)), dim=1)
+        x = torch.cat((x, x1, a.view(-1, 1)), dim=1)
 
         x = self.mlp(x)
         return x
@@ -76,13 +77,13 @@ class DDPGCritic():
         self.optimizer = optim.Adam([{'params': self.q_net.fcn.parameters()}, {'params': self.q_net.mlp.parameters()}], lr=self.lr)
         self.loss = nn.SmoothL1Loss()  # AKA Huber loss
     
-    def forward(self, state, action):
-        return self.q_net(state, action).detach()
+    def forward(self, state, arm_state, action):
+        return self.q_net.forward(state, arm_state, action).detach()
     
-    def update(self, states, actions, next_states, rewards, terminals, actor):
-        q_values = self.q_net.forward(states, actions).squeeze()
+    def update(self, states, arm_states, actions, next_states, next_arm_state, rewards, terminals, actor):
+        q_values = self.q_net.forward(states, arm_states, actions).squeeze()
 
-        next_q_values = self.q_net_target.forward(next_states, actor.actor_net_target(next_states)).squeeze()
+        next_q_values = self.q_net_target.forward(next_states, next_arm_state, actor.actor_net_target.forward(next_states, next_arm_state)).squeeze()
         next_q_values = next_q_values.detach()
 
         target = rewards + self.gamma * next_q_values * (1.0 - terminals)
