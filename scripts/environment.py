@@ -10,7 +10,7 @@ from utils import to_device
 class Environment():
     
     def __init__(self, config):
-        self.arm = RobotArm()
+        self.arm = RobotArm(config)
 
         self.agent = config["alg"]["agent"]
         self.threshold = config["env"]["threshold"]
@@ -39,9 +39,9 @@ class Environment():
         return next_state, reward, terminal
     
     def update_ddpg(self, action):
-        result = self.arm.do_action(action)
+        result, use_gripper = self.arm.do_action(action)
         next_state = self.get_state()
-        reward = self.get_reward_ddpg(result, next_state)
+        reward = self.get_reward_ddpg(result, use_gripper, next_state)
         terminal = self.is_terminal(next_state)
 
         self.current_state = next_state
@@ -56,13 +56,13 @@ class Environment():
         #else if sum(next_state - self.current_state) > threshold:
         return reward
         
-    def get_reward_ddpg(self, result, next_state):
+    def get_reward_ddpg(self, result, use_gripper, next_state):
         reward = 0.0
-        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold:
+        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold and not use_gripper:
             reward = -0.5
-        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() > self.threshold:
+        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() > self.threshold and not use_gripper:
             reward = 0.1
-        if result == False:
+        if not result:
             reward = -1.0
         if self.arm.bot.gripper.get_gripper_state() == 2:
             #make arm put object in bin
@@ -92,10 +92,13 @@ class Environment():
 
         arm_state = self.arm.bot.arm.get_joint_angles()     
         gripper_state = self.arm.bot.gripper.get_gripper_state()
-        arm_state = to_device(torch.from_numpy(np.append(arm_state, gripper_state)))
+        arm_state = torch.from_numpy(np.append(arm_state, gripper_state))
         arm_state = arm_state.float().unsqueeze(0)
+        arm_state = to_device(arm_state)
         return state, arm_state
     
     def reset(self):
+        self.arm.reset()
+        
         self.t = 0
         self.current_state = self.get_state()
