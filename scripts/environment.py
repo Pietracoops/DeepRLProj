@@ -10,6 +10,7 @@ import rospy
 from std_srvs.srv import Empty
 
 from utils import to_device
+from collision_utils import Collision
 
 class Environment():
     
@@ -23,6 +24,8 @@ class Environment():
         self.max_timesteps = config["env"]["max_timesteps"]
         self.current_state = None
         self.reset()
+
+        self.collision_listener = Collision()
 
     def update(self, action):
         if self.agent == "dqn":
@@ -62,12 +65,16 @@ class Environment():
         
     def get_reward_ddpg(self, result, use_gripper, next_state):
         reward = 0.0
-        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold and not use_gripper:
-            reward = -0.5
         if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() > self.threshold and not use_gripper:
             reward = 0.1
+        if self.collision_listener.search_for_collision() == True:
+            reward = 0.5
+
+        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold and not use_gripper:
+            reward = -0.5
         if not result:
             reward = -1.0
+
         if self.arm.bot.gripper.get_gripper_state() == 2:
             #make arm put object in bin
             reward = 1.0
@@ -102,11 +109,13 @@ class Environment():
         return state, arm_state
     
     def reset(self):
+        self.arm.reset()
+
         rospy.wait_for_service('/gazebo/reset_world')
         reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
         reset_world()
 
-        self.arm.reset()
+        time.sleep(1)
 
         self.t = 0
         self.current_state = self.get_state()

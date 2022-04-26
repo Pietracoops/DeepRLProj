@@ -1,5 +1,6 @@
 
 import math
+import numpy as np
 import pose_utils
 from gazebo_msgs.srv import GetModelState
 import rospy
@@ -23,6 +24,9 @@ class Collision():
         'block_h': Block('mass_cube_dark_blue')
         }
 
+        self.eps = 0.001
+        self.get_gazebo_models_init()
+
     def get_gazebo_models_init(self, logging=False):
         try:
             model_coordinates = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
@@ -43,22 +47,22 @@ class Collision():
         except rospy.ServiceException as e:
             rospy.loginfo("Get Model State service call failed:  {0}".format(e))
 
-    def SearchForCollision(self):
+    def search_for_collision(self):
         ret_val = False
         try:
             model_coordinates = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
             for block in self._blockListDict.itervalues():
                 blockName = str(block._name)
                 resp_coordinates = model_coordinates(blockName, "")
-            if block._pose.x != float(resp_coordinates.pose.position.x):
-                block._pose.x = float(resp_coordinates.pose.position.x)
-                ret_val = True
-            if block._pose.y != float(resp_coordinates.pose.position.y):
-                block._pose.y = float(resp_coordinates.pose.position.y)
-                ret_val = True
-            if block._pose.z != float(resp_coordinates.pose.position.z):
-                block._pose.z = float(resp_coordinates.pose.position.z)
-                ret_val = True
+                if (np.abs(block._pose.x - float(resp_coordinates.pose.position.x)) > self.eps):
+                    block._pose.x = float(resp_coordinates.pose.position.x)
+                    ret_val = True
+                if (np.abs(block._pose.y - float(resp_coordinates.pose.position.y)) > self.eps):
+                    block._pose.y = float(resp_coordinates.pose.position.y)
+                    ret_val = True
+                if (np.abs(block._pose.z - float(resp_coordinates.pose.position.z)) > self.eps):
+                    block._pose.z = float(resp_coordinates.pose.position.z)
+                    ret_val = True
         except rospy.ServiceException as e:
             rospy.loginfo("Get Model State service call failed:  {0}".format(e))
         return ret_val
