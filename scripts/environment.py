@@ -26,7 +26,8 @@ class Environment():
         self.collision_listener = Collision(config, self.arm.bot)
         self.reset()
 
-        self.collision = 0
+        self.collisions = 0
+        self.graps = 0
 
     def update(self, action):
         if self.agent == "dqn":
@@ -67,7 +68,7 @@ class Environment():
     def get_reward_ddpg(self, result, use_gripper, next_state):
         reward = 0.0
         if self.collision_listener.search_for_collision() == True:
-            self.collision += 1
+            self.collisions += 1
             reward = 0.5
 
         if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold and not use_gripper:
@@ -76,10 +77,10 @@ class Environment():
             reward = -1.0
 
         if self.arm.bot.gripper.get_gripper_state() == 2:
-            #make arm put object in bin
+            self.graps += 1
+            self.arm.reset()
             reward = 1.0
 
-        print("Collision: ", self.collision)
         return reward
     
     def is_terminal(self, next_state):
