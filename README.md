@@ -359,6 +359,7 @@ http://www-labs.iro.umontreal.ca/~lokbani/
 ## Setting up the Block World
 In order to setup gazebo to launch from the same world every time the following steps need to be followed
 
+- Open up the block_world.world and replace all the home directory paths with your own home directory.
 - Navigate to the directory /home/*user*/low_cost_ws/src/pyrobot/robots/LoCoBot/locobot_gazebo/worlds and place the block_world.world file in there.
 - Next we want to navigate to the file /home/massimo/low_cost_ws/src/pyrobot/robots/LoCoBot/locobot_gazebo/launch/empty_world.launch and modify the world name to contain our newly imported world file.
 
