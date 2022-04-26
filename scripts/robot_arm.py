@@ -15,30 +15,31 @@ ACTION_UPPER_JOINT_LIMIT = ACTION_UPPER_LIMIT - ACTION_INCREMENTS
 ACTION_LOWER_JOINT_LIMIT = ACTION_LOWER_LIMIT + ACTION_INCREMENTS
 
 class RobotArm():
-    def __init__(self):
-        self.bot = Robot('locobot')
-        self.bot.camera.reset()
-        self.bot.camera.set_tilt(0.6, wait=True)
+    def __init__(self, config):
+        self.camera_tilt = config["robot_arm"]["camera_tilt"]
+        self.delay = config["robot_arm"]["delay"]
 
-        self.bot.arm.go_home()
-        self.bot.gripper.open(wait=True)
-        time.sleep(1)
+        self.bot = Robot('locobot')
+        self.reset()
     
     def do_action(self, action):
-        result = False
+        result = True
         use_joints = False
+        use_gripper = False
 
         joint = self.bot.arm.get_joint_angles() 
         action = np.clip(action.item(), ACTION_LOWER_LIMIT, ACTION_UPPER_LIMIT)
         if action >= ACTION_LOWER_LIMIT and action <= ACTION_LOWER_LIMIT + ACTION_INCREMENTS:
-            if self.bot.gripper.get_gripper_state() != 0:
-                result = True
+            if self.bot.gripper.get_gripper_state() == 0:
+                result = False
 
+            use_gripper = True
             result = self.bot.gripper.open(wait=False)
         elif action > ACTION_UPPER_LIMIT - ACTION_INCREMENTS and action <= ACTION_UPPER_LIMIT:
-            if self.bot.gripper.get_gripper_state() != 0:
-                result = True
+            if self.bot.gripper.get_gripper_state() == 1 or self.bot.gripper.get_gripper_state() == 3:
+                result = False
 
+            use_gripper = True
             result = self.bot.gripper.close(wait=False)
         else:
             use_joints = True
@@ -48,11 +49,14 @@ class RobotArm():
             joint[joint_num] = JOINT_LIMIT_MIN + (JOINT_LIMIT_MAX - JOINT_LIMIT_MIN) * ((action - current_lower) / (current_upper - current_lower))
 
         if use_joints:
-            result = True
             self.bot.arm.set_joint_positions(joint, plan=False, wait=False)
-            time.sleep(0.5)
-        return result
+            time.sleep(self.delay)
+        return result, use_gripper
 
     def reset(self):
+        self.bot.camera.reset()
+        self.bot.camera.set_tilt(self.camera_tilt, wait=False)        
+
         self.bot.arm.go_home()
+        self.bot.gripper.open(wait=False)
         time.sleep(1)

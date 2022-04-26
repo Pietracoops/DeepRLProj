@@ -7,6 +7,10 @@ alg:
 env:
     threshold: 0.05
     max_timesteps: 10
+
+robot_arm:
+    camera_tilt: 0.6
+    delay: 0.5
     
 logger:
     average_over: 10
@@ -66,5 +70,5 @@ ddpg_agent:
       n_linear_layers: 2
       size: 32
       activation: tanh
-      lr: 0.0002
+      lr: 0.00002
       grad_norm_clipping: 10
