@@ -20,12 +20,7 @@ class RobotArm():
         self.delay = config["robot_arm"]["delay"]
 
         self.bot = Robot('locobot')
-        self.bot.camera.reset()
-        self.bot.camera.set_tilt(self.camera_tilt, wait=True)
-
-        self.bot.arm.go_home()
-        self.bot.gripper.open(wait=True)
-        time.sleep(1)
+        self.reset()
     
     def do_action(self, action):
         result = True
@@ -59,5 +54,9 @@ class RobotArm():
         return result, use_gripper
 
     def reset(self):
+        self.bot.camera.reset()
+        self.bot.camera.set_tilt(self.camera_tilt, wait=False)        
+
         self.bot.arm.go_home()
+        self.bot.gripper.open(wait=False)
         time.sleep(1)

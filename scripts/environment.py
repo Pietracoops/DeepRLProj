@@ -1,9 +1,13 @@
 import numpy as np
+import time
 import torch
 
 from robot_arm import RobotArm
 from pyrobot.utils.util import try_cv2_import
 cv2 = try_cv2_import()
+
+import rospy
+from std_srvs.srv import Empty
 
 from utils import to_device
 
@@ -98,7 +102,11 @@ class Environment():
         return state, arm_state
     
     def reset(self):
+        rospy.wait_for_service('/gazebo/reset_world')
+        reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+        reset_world()
+
         self.arm.reset()
-        
+
         self.t = 0
         self.current_state = self.get_state()
