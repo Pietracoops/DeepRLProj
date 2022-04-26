@@ -4,6 +4,7 @@ import numpy as np
 import pose_utils
 from gazebo_msgs.srv import GetModelState
 import rospy
+import numpy as np
 
 class Block:
     def __init__(self, name):

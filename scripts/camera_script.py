@@ -3,6 +3,15 @@ import os
 import math
 import time
 
+import rospy
+from std_srvs.srv import Empty
+
+import pose_utils
+
+
+
+import collision_utils
+
 # import colorsys
 # import pyrealsense2 as rs
 # import shutil
@@ -326,11 +335,15 @@ def run_pic_coordinates_sim():
     
     
     target_poses = [
-        {   "position": np.array([0.1, 0.37, 0.2]),
+        {   "position": np.array([0.25, 0, -0.1]),
             "pitch": np.pi/2, 
             "numerical": False
         }
     ]
+
+    # rospy.wait_for_service('/gazebo/reset_world')
+    # reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+    # reset_world()
 
         # {   "position": np.array([0.45, -0.12, 0.21]), 
         #     "pitch": np.pi/2, 
@@ -342,6 +355,16 @@ def run_pic_coordinates_sim():
         time.sleep(1)
 
     #robot_move_from_cam_vision(bot)
+
+    pose_obj = pose_utils.Pose()
+    pose_obj.UpdateRobotPose(bot)
+    pose_obj.PrintPose()
+
+    pose_array = [pose_utils.Pose(0.0,0.2,0.3),
+                  pose_utils.Pose(0.0,2.2,3.3),
+                  pose_utils.Pose(10.0,2.2,3.3)]
+
+    closest_distance, distances = pose_obj.GetClosestDistance(pose_array)
     
     
 
@@ -373,6 +396,41 @@ def run_pic_coordinates_sim():
     file.close
     cv2.waitKey(100000000)
 
+
+
+
+def get_objects_gazebo():
+    bot = Robot("locobot")
+    bot.camera.reset()
+    bot.arm.go_home()
+    cv2 = try_cv2_import()
+
+
+    col_obj = collision_utils.Collision()
+    col_obj.get_gazebo_models_init(True)
+
+    # target_poses = [
+    #     {"position": np.array([0.398959, -0.17066, 0.072997]),
+    #      "pitch": np.pi / 2,
+    #      "numerical": False
+    #      }
+    # ]
+    #
+    # for pose in target_poses:
+    #     bot.arm.set_ee_pose_pitch_roll(**pose)
+    #     time.sleep(1)
+
+    pose_obj = pose_utils.Pose()
+    pose_obj.UpdateRobotPose(bot)
+    pose_obj.PrintPose()
+    pose_obj.DetectCollisionV2(0.42918,0.1853,0.023998)
+
+
+    print(col_obj.SearchForCollision())
+
+
+
+
 if __name__ == "__main__":
 
     # Function to get RGB and Depth image
@@ -382,4 +440,5 @@ if __name__ == "__main__":
     #get_position()
     #get_rpy()
     #run_sim()
-    run_pic_coordinates_sim()
+    #run_pic_coordinates_sim()
+    get_objects_gazebo()
