@@ -71,7 +71,7 @@ class Environment():
             reward = 0.5
 
         if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold and not use_gripper:
-            reward = -0.5
+            reward = -0.1
         if not result:
             reward = -1.0
 
