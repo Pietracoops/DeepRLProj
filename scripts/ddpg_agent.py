@@ -8,9 +8,8 @@ from replay_buffer import ReplayBuffer
 class DDPGAgent():
     
     def __init__(self, n_iter, agent_params):
-        
-        self.critic = DDPGCritic(agent_params["q_net"])
-        self.actor = DDPGActor(agent_params["actor_net"])
+        self.critic = DDPGCritic(agent_params["q_net"], agent_params["load"])
+        self.actor = DDPGActor(agent_params["actor_net"], agent_params["load"])
 
         self.n_actions = 5.0 + 2.0 # Number of Joints + Open and Close Grippers
         print("Size of action space: {}".format(self.n_actions))
@@ -23,6 +22,8 @@ class DDPGAgent():
         self.learning_freq = agent_params["learning_freq"]
         self.target_update_freq = agent_params["target_update_freq"]
         self.batch_size = agent_params["batch_size"]
+
+        self.save_freq = agent_params["save_freq"]
         
         self.t = 0
         self.num_param_updates = 0
@@ -60,6 +61,10 @@ class DDPGAgent():
             if self.num_param_updates % self.target_update_freq == 0:
                 self.critic.update_target_network()
                 self.actor.update_target_network() 
+
+            if self.t % self.save_freq == 0:
+                self.actor.save()
+                self.critic.save()
 
         self.t += 1 
         return logs

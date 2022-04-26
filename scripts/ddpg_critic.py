@@ -66,8 +66,12 @@ class CriticNetwork():
         return x
 
 class DDPGCritic():
-    def __init__(self, net_params):        
+    def __init__(self, net_params, load):       
         self.gamma = net_params["gamma"]
+        self.polyak_avg = net_params["polyak_avg"]
+
+        self.fcn_path = "../model/critic/fcn.pt"
+        self.mlp_path = "../model/critic/mlp.pt"
         
         self.q_net = CriticNetwork(net_params)
         self.q_net_target = CriticNetwork(net_params)
@@ -76,6 +80,9 @@ class DDPGCritic():
         self.grad_norm_clipping = net_params["grad_norm_clipping"]
         self.optimizer = optim.Adam([{'params': self.q_net.fcn.parameters()}, {'params': self.q_net.mlp.parameters()}], lr=self.lr)
         self.loss = nn.SmoothL1Loss()  # AKA Huber loss
+
+        if load:
+            self.load()
     
     def forward(self, state, arm_state, action):
         return self.q_net.forward(state, arm_state, action).detach()
@@ -101,7 +108,15 @@ class DDPGCritic():
         
     def update_target_network(self):
         for target_param, param in zip(self.q_net_target.fcn.parameters(), self.q_net.fcn.parameters()):
-            target_param.data.copy_(param.data)
+            target_param.data.copy_(self.polyak_avg * param + (1.0 - self.polyak_avg) * target_param)
 
         for target_param, param in zip(self.q_net_target.mlp.parameters(), self.q_net.mlp.parameters()):
-            target_param.data.copy_(param.data)
+            target_param.data.copy_(self.polyak_avg * param + (1.0 - self.polyak_avg) * target_param)
+
+    def save(self):
+        torch.save(self.q_net.fcn.state_dict(), self.fcn_path)
+        torch.save(self.q_net.mlp.state_dict(), self.mlp_path)
+
+    def load(self):
+        self.q_net.fcn.load_state_dict(torch.load(self.fcn_path))
+        self.q_net.mlp.load_state_dict(torch.load(self.mlp_path))

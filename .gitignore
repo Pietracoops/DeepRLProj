@@ -130,3 +130,6 @@ dmypy.json
 
 # Remove log files
 log/
+
+# Remove model files
+model/

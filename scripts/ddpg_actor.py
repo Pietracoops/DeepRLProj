@@ -67,14 +67,22 @@ class ActorNetwork():
 
 class DDPGActor():
     
-    def __init__(self, net_params):
+    def __init__(self, net_params, load):
         self.actor_net = ActorNetwork(net_params)
         self.actor_net_target = ActorNetwork(net_params)
+
+        self.fcn_path = "../model/actor/fcn.pt"
+        self.mlp_path = "../model/actor/mlp.pt"
         
+        self.polyak_avg = net_params["polyak_avg"]
+
         self.lr = net_params["lr"]
         self.grad_norm_clipping = net_params["grad_norm_clipping"]
         self.optimizer = optim.Adam([{'params': self.actor_net.fcn.parameters()}, {'params': self.actor_net.mlp.parameters()}], lr=self.lr)
     
+        if load:
+            self.load()
+
     def forward(self, state, arm_state):
         return self.actor_net.forward(state, arm_state).detach()
     
@@ -91,7 +99,15 @@ class DDPGActor():
         
     def update_target_network(self):
         for target_param, param in zip(self.actor_net_target.fcn.parameters(), self.actor_net.fcn.parameters()):
-            target_param.data.copy_(param.data)
+            target_param.data.copy_(self.polyak_avg * param + (1.0 - self.polyak_avg) * target_param)
 
         for target_param, param in zip(self.actor_net_target.mlp.parameters(), self.actor_net.mlp.parameters()):
-            target_param.data.copy_(param.data)
+            target_param.data.copy_(self.polyak_avg * param + (1.0 - self.polyak_avg) * target_param)
+
+    def save(self):
+        torch.save(self.actor_net.fcn.state_dict(), self.fcn_path)
+        torch.save(self.actor_net.mlp.state_dict(), self.mlp_path)
+
+    def load(self):
+        self.actor_net.fcn.load_state_dict(torch.load(self.fcn_path))
+        self.actor_net.mlp.load_state_dict(torch.load(self.mlp_path))

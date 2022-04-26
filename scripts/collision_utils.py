@@ -12,13 +12,12 @@ class Block:
         self._pose = pose_utils.Pose()
 
 class Collision():
-    def __init__(self):
+    def __init__(self, config, bot):
         # World specific blocks
         self._blockListDict = {
         'block_a': Block('mass_cube_green'),
         'block_b': Block('mass_cube_green_clone'),
         'block_c': Block('mass_cube_pink'),
-        'block_d': Block('mass_cube_pink_clone'),
         'block_e': Block('mass_cube_blue'),
         'block_f': Block('mass_cube_red'),
         'block_g': Block('mass_cube_red_clone'),
@@ -26,7 +25,8 @@ class Collision():
         }
 
         self.eps = 0.001
-        self.get_gazebo_models_init()
+        self.threshold = config["env"]["ee_collision_threshold"]
+        self.bot = bot
 
     def get_gazebo_models_init(self, logging=False):
         try:
@@ -51,19 +51,32 @@ class Collision():
     def search_for_collision(self):
         ret_val = False
         try:
+            pose_obj = pose_utils.Pose()
+            pose_obj.UpdateRobotPose(self.bot)
             model_coordinates = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
             for block in self._blockListDict.itervalues():
                 blockName = str(block._name)
                 resp_coordinates = model_coordinates(blockName, "")
-                if (np.abs(block._pose.x - float(resp_coordinates.pose.position.x)) > self.eps):
-                    block._pose.x = float(resp_coordinates.pose.position.x)
-                    ret_val = True
-                if (np.abs(block._pose.y - float(resp_coordinates.pose.position.y)) > self.eps):
-                    block._pose.y = float(resp_coordinates.pose.position.y)
-                    ret_val = True
-                if (np.abs(block._pose.z - float(resp_coordinates.pose.position.z)) > self.eps):
-                    block._pose.z = float(resp_coordinates.pose.position.z)
-                    ret_val = True
+                x = float(resp_coordinates.pose.position.x)
+                y = float(resp_coordinates.pose.position.y)
+                z = float(resp_coordinates.pose.position.z)
+
+                distance = pose_obj.GetEuclidianDistance(x, y, z)
+                if (np.abs(block._pose.x - x) > self.eps):
+                    block._pose.x = x
+                    print("distance: ", distance)
+                    if distance < self.threshold:
+                        ret_val = True
+                if (np.abs(block._pose.y - y) > self.eps):
+                    block._pose.y = y
+                    print("distance: ", distance)
+                    if distance < self.threshold:
+                        ret_val = True
+                if (np.abs(block._pose.z - z) > self.eps):
+                    block._pose.z = z
+                    print("distance: ", distance)
+                    if distance < self.threshold:
+                        ret_val = True
         except rospy.ServiceException as e:
             rospy.loginfo("Get Model State service call failed:  {0}".format(e))
         return ret_val

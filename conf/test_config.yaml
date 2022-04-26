@@ -6,7 +6,8 @@ alg:
 
 env:
     threshold: 0.05
-    max_timesteps: 10
+    ee_collision_threshold: 0.15
+    max_timesteps: 100
 
 robot_arm:
     camera_tilt: 0.6
@@ -41,8 +42,10 @@ ddpg_agent:
     noise: 1.0
     learning_starts: 10
     learning_freq: 1
-    target_update_freq: 4
+    target_update_freq: 1
     batch_size: 4
+    save_freq: 100
+    load: True
     
     q_net:
         n_conv_layers: 3
@@ -56,6 +59,7 @@ ddpg_agent:
         size: 32
         activation: tanh
         gamma: 0.99
+        polyak_avg: 0.01
         lr: 0.0002
         grad_norm_clipping: 10
 
@@ -70,5 +74,6 @@ ddpg_agent:
       n_linear_layers: 2
       size: 32
       activation: tanh
+      polyak_avg: 0.01
       lr: 0.00002
       grad_norm_clipping: 10
