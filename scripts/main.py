@@ -55,7 +55,6 @@ def run_training_loop(config, env, agent, logger):
         del terminal
         del data
         torch.cuda.empty_cache()
-
         if i % config["alg"]["flush_frequency"] == 0:
             gc.collect()
 

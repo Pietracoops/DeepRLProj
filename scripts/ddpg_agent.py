@@ -13,6 +13,10 @@ class DDPGAgent():
 
         self.n_actions = 5.0 + 2.0 # Number of Joints + Open and Close Grippers
         print("Size of action space: {}".format(self.n_actions))
+        print(self.critic.q_net.fcn)
+        print(self.critic.q_net.mlp)
+        print(self.actor.actor_net.fcn)
+        print(self.actor.actor_net.mlp)
 
         self.replay_buffer = ReplayBuffer(agent_params["size"])
         
