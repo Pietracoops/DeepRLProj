@@ -28,7 +28,7 @@ class DDPGAgent():
         self.num_param_updates = 0
     
     def get_action(self, state):
-        perform_random_action = np.random.uniform(-self.noise, self.noise)
+        perform_random_action = np.random.normal(0.0, self.noise)
         action = self.actor.forward(state[0], state[1]) + perform_random_action
         return action
     

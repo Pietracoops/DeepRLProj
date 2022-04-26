@@ -5,7 +5,7 @@ alg:
     agent: ddpg
 
 env:
-    threshold: 0.1
+    threshold: 0.05
     max_timesteps: 10
     
 logger:
@@ -34,7 +34,7 @@ dqn_agent:
 
 ddpg_agent:
     size: 100000
-    noise: 0.5
+    noise: 1.0
     learning_starts: 10
     learning_freq: 1
     target_update_freq: 4
@@ -52,7 +52,7 @@ ddpg_agent:
         size: 32
         activation: tanh
         gamma: 0.99
-        lr: 0.0001
+        lr: 0.0002
         grad_norm_clipping: 10
 
     actor_net:
@@ -66,5 +66,5 @@ ddpg_agent:
       n_linear_layers: 2
       size: 32
       activation: tanh
-      lr: 0.00002
+      lr: 0.0002
       grad_norm_clipping: 10

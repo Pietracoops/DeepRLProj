@@ -19,20 +19,50 @@ class Environment():
         self.max_timesteps = config["env"]["max_timesteps"]
         self.current_state = None
         self.reset()
-    
+
     def update(self, action):
-        result = self.arm.do_action(action)
+        if self.agent == "dqn":
+            return self.update_dqn(action)
+        elif self.agent == "ddpg":
+            return self.update_ddpg(action)
+        else:
+            raise NotImplementedError
+
+    def update_dqn(self, action):
+        #self.arm.do_action(action)
         next_state = self.get_state()
-        reward = self.get_reward(result)
+        reward = self.get_reward_dqn(next_state)
         terminal = self.is_terminal(next_state)
 
         self.current_state = next_state
         self.t += 1
         return next_state, reward, terminal
-        
-    def get_reward(self, result):
+    
+    def update_ddpg(self, action):
+        result = self.arm.do_action(action)
+        next_state = self.get_state()
+        reward = self.get_reward_ddpg(result, next_state)
+        terminal = self.is_terminal(next_state)
+
+        self.current_state = next_state
+        self.t += 1
+        return next_state, reward, terminal
+
+    def get_reward_dqn(self, next_state):
         reward = 0.0
-        if not result:
+        #check gripper sensors, if object between grippers
+        #make arm put object in bin
+        #reward = 1.0
+        #else if sum(next_state - self.current_state) > threshold:
+        return reward
+        
+    def get_reward_ddpg(self, result, next_state):
+        reward = 0.0
+        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold:
+            reward = -0.5
+        if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() > self.threshold:
+            reward = 0.1
+        if result == False:
             reward = -1.0
         if self.arm.bot.gripper.get_gripper_state() == 2:
             #make arm put object in bin

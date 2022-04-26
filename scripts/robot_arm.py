@@ -1,8 +1,18 @@
+import math
 import numpy as np
 import time
 import torch
 
 from pyrobot import Robot
+
+JOINT_LIMIT_MAX = np.pi * 0.5
+JOINT_LIMIT_MIN = -np.pi * 0.5
+ACTION_UPPER_LIMIT = 3.5
+ACTION_LOWER_LIMIT = -3.5
+NUM_ACTIONS = 7
+ACTION_INCREMENTS = ((ACTION_UPPER_LIMIT - ACTION_LOWER_LIMIT) / NUM_ACTIONS)
+ACTION_UPPER_JOINT_LIMIT = ACTION_UPPER_LIMIT - ACTION_INCREMENTS
+ACTION_LOWER_JOINT_LIMIT = ACTION_LOWER_LIMIT + ACTION_INCREMENTS
 
 class RobotArm():
     def __init__(self):
@@ -18,30 +28,29 @@ class RobotArm():
         result = False
         use_joints = False
 
-        action = np.clip(action.cpu().numpy(), 0.0, 7.0)
-        joint = [0.0, 0.0, 0.0, 0.0, 0.0]
-        if action >= 0.0 and action <= 1.0:
-            result = self.bot.gripper.open(wait=True)
-        elif action > 1.0 and action <= 2.0:
-            joint[0] = 2.0 * np.pi * (action - 1.0)
+        joint = self.bot.arm.get_joint_angles() 
+        action = np.clip(action.item(), ACTION_LOWER_LIMIT, ACTION_UPPER_LIMIT)
+        if action >= ACTION_LOWER_LIMIT and action <= ACTION_LOWER_LIMIT + ACTION_INCREMENTS:
+            if self.bot.gripper.get_gripper_state() != 0:
+                result = True
+
+            result = self.bot.gripper.open(wait=False)
+        elif action > ACTION_UPPER_LIMIT - ACTION_INCREMENTS and action <= ACTION_UPPER_LIMIT:
+            if self.bot.gripper.get_gripper_state() != 0:
+                result = True
+
+            result = self.bot.gripper.close(wait=False)
+        else:
             use_joints = True
-        elif action > 2.0 and action <= 3.0:
-            joint[1] = 2.0 * np.pi * (action - 2.0)
-            use_joints = True
-        elif action > 3.0 and action <= 4.0:
-            joint[2] = 2.0 * np.pi * (action - 3.0)
-            use_joints = True
-        elif action > 4.0 and action <= 5.0:
-            joint[3] = 2.0 * np.pi * (action - 4.0)
-            use_joints = True
-        elif action > 5.0 and action <= 6.0:
-            joint[4] = 2.0 * np.pi * (action - 5.0)
-            use_joints = True
-        elif action > 6.0 and action <= 7.0:
-            result = self.bot.gripper.close(wait=True)
+            joint_num = int(math.floor(action - ACTION_LOWER_JOINT_LIMIT))
+            current_lower = (joint_num * ACTION_INCREMENTS) + ACTION_LOWER_JOINT_LIMIT
+            current_upper = current_lower + ACTION_INCREMENTS
+            joint[joint_num] = JOINT_LIMIT_MIN + (JOINT_LIMIT_MAX - JOINT_LIMIT_MIN) * ((action - current_lower) / (current_upper - current_lower))
 
         if use_joints:
-            result = self.bot.arm.set_joint_positions(joint, plan=False, wait=True)
+            result = True
+            self.bot.arm.set_joint_positions(joint, plan=False, wait=False)
+            time.sleep(0.5)
         return result
 
     def reset(self):

@@ -70,6 +70,7 @@ class Logger:
 
     def log_ddpg(self, data):
         logs = { } 
+        logs["Current_Action"] = data["action"].item()
         logs["Current_Cumulative_Reward"] = self.agent_cumulative_rewards
         if self.t > self.logging_starts:
             if len(self.agent_rewards) > 1:
