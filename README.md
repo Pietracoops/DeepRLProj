@@ -252,6 +252,8 @@ To launch the model you need to first activate the virtual environment:
 load_pyrobot_env
 ```
 
+NOTE if it doesn't work and you get a A LIBGL segmentation fault, that is because you need to follow the xlaunch setup written above and disable the native gl stuff.
+
 # Massimo's Ubuntu installation for the actual robot manipulation
 First you will need to run the following commands to install the robotics libaries
 
