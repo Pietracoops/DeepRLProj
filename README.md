@@ -229,7 +229,7 @@ Once the installation completes, make sure to restart the terminal or computer (
 
 You can test the installation using the following command:
 ```
-roslaunch locobot_control main.launch use_arm:=true use_sim:=true teleop:=true use_camera:=true use_base:=true
+roslaunch locobot_control main.launch use_arm:=true use_sim:=true teleop:=true use_camera:=true use_base:=true use_rviz:=false
 ```
 
 Update Gazebo using the following commands:
@@ -245,6 +245,11 @@ Make sure the display LIBGL variable are set in your bash, if not:
 echo "export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0" >> ~/.bashrc
 echo "export LIBGL_ALWAYS_INDIRECT=0" >> ~/.bashrc
 source ~/.bashrc
+```
+
+To launch the model you need to first activate the virtual environment:
+```
+load_pyrobot_env
 ```
 
 # Massimo's Ubuntu installation for the actual robot manipulation
