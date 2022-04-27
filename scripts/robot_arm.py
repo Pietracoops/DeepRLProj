@@ -58,5 +58,7 @@ class RobotArm():
         self.bot.camera.set_tilt(self.camera_tilt, wait=False)        
 
         self.bot.arm.go_home()
+        self.bot.gripper.reset(wait=False)
+        time.sleep(1)
         self.bot.gripper.open(wait=False)
         time.sleep(1)

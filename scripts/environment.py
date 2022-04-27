@@ -27,7 +27,7 @@ class Environment():
         self.reset()
 
         self.collisions = 0
-        self.graps = 0
+        self.grasps = 0
 
     def update(self, action):
         if self.agent == "dqn":
@@ -67,7 +67,8 @@ class Environment():
         
     def get_reward_ddpg(self, result, use_gripper, next_state):
         reward = 0.0
-        if self.collision_listener.search_for_collision() == True:
+        collision = self.collision_listener.search_for_collision()
+        if collision == True:
             self.collisions += 1
             reward = 0.5
 
@@ -76,8 +77,8 @@ class Environment():
         if not result:
             reward = -1.0
 
-        if self.arm.bot.gripper.get_gripper_state() == 2:
-            self.graps += 1
+        if collision == True and self.arm.bot.gripper.get_gripper_state() == 2:
+            self.grasps += 1
             self.arm.reset()
             reward = 1.0
 

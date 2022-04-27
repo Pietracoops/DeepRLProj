@@ -73,17 +73,19 @@ class Logger:
         logs["Current_Action"] = data["action"].item()
         logs["Current_Cumulative_Reward"] = self.agent_cumulative_rewards
         logs["Collisions"] = data["collisions"]
-        logs["Graps"] = data["graps"]
+        logs["Grasps"] = data["grasps"]
         if self.t > self.logging_starts:
             if len(self.agent_rewards) > 1:
                 logs["Average_Rewards"] = np.mean(np.array(self.agent_rewards[-self.n:]))
                 logs["Last_Cumulative_Reward"] = self.agent_rewards[-1]
             if data["update_logs"] is not None:
-                logs["Critic_Loss"] = data["update_logs"]["critic"]["loss"]
-                logs["Critic_Q_Values"] = data["update_logs"]["critic"]["q_values"]
-                logs["Critic_Q_Targets"] = data["update_logs"]["critic"]["target_q_values"]
+                if "critic" in data["update_logs"]:
+                    logs["Critic_Loss"] = data["update_logs"]["critic"]["loss"]
+                    logs["Critic_Q_Values"] = data["update_logs"]["critic"]["q_values"]
+                    logs["Critic_Q_Targets"] = data["update_logs"]["critic"]["target_q_values"]
 
-                logs["Actor_Loss"] = data["update_logs"]["actor"]["loss"]
-                logs["Actor_Actions"] = data["update_logs"]["actor"]["actions"]
+                if "actor" in data["update_logs"]:
+                    logs["Actor_Loss"] = data["update_logs"]["actor"]["loss"]
+                    logs["Actor_Actions"] = data["update_logs"]["actor"]["actions"]
 
         return logs
