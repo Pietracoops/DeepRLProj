@@ -70,7 +70,7 @@ class Logger:
 
     def log_ddpg(self, data):
         logs = { } 
-        logs["Current_Action"] = data["action"].item()
+        logs["Current_Action"] = data["action"]
         logs["Current_Cumulative_Reward"] = self.agent_cumulative_rewards
         logs["Collisions"] = data["collisions"]
         logs["Grasps"] = data["grasps"]

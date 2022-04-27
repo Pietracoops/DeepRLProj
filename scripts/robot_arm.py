@@ -28,7 +28,7 @@ class RobotArm():
         use_gripper = False
 
         joint = self.bot.arm.get_joint_angles() 
-        action = np.clip(action.item(), ACTION_LOWER_LIMIT, ACTION_UPPER_LIMIT)
+        action = np.clip(action, ACTION_LOWER_LIMIT, ACTION_UPPER_LIMIT)
         if action >= ACTION_LOWER_LIMIT and action <= ACTION_LOWER_LIMIT + ACTION_INCREMENTS:
             if self.bot.gripper.get_gripper_state() == 0:
                 result = False

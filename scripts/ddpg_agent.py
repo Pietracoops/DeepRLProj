@@ -35,7 +35,7 @@ class DDPGAgent():
     def get_action(self, state):
         perform_random_action = np.random.normal(0.0, self.noise)
         action = self.actor.forward(state[0], state[1]) + perform_random_action
-        return action
+        return action.item()
     
     def store(self, state, action, next_state, reward, terminal):
         self.replay_buffer.store(state, action, next_state, reward, terminal)
@@ -56,10 +56,13 @@ class DDPGAgent():
             logs["actor"] = self.actor.update(states, next_arm_states, self.critic)
 
             del states
+            del arm_states
             del actions
             del next_states
+            del next_arm_states
             del rewards
             del terminals
+            torch.cuda.empty_cache()
 
             self.num_param_updates += 1
             if self.num_param_updates % self.target_update_freq == 0:

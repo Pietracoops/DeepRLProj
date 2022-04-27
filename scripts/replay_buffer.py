@@ -19,6 +19,17 @@ class ReplayBuffer():
         self.terminals = []
         
     def store(self, state, action, next_state, reward, terminal):
+        state      = [state[0], state[1]]
+        next_state = [next_state[0], next_state[1]]
+
+        state[0]      = state[0].cpu().detach().numpy()
+        next_state[0] = next_state[0].cpu().detach().numpy()
+
+        if state[1] is not None:
+            state[1] = state[1].cpu().detach().numpy()
+        if next_state[1] is not None:
+            next_state[1] = next_state[1].cpu().detach().numpy()
+
         if self.current_size < self.size:
             self.states.append(state[0])
             self.arm_states.append(state[1])
@@ -46,9 +57,9 @@ class ReplayBuffer():
     def sample_dqn(self, batch_size):
         indices = np.random.randint(0, self.current_size, size=batch_size)
 
-        states      = to_device(torch.cat([self.states[i] for i in indices], dim=0))
+        states      = to_device(torch.cat([torch.from_numpy(self.states[i]) for i in indices], dim=0))
         actions     = to_device(torch.tensor([self.actions[i] for i in indices], dtype=torch.long))
-        next_states = to_device(torch.cat([self.next_states[i] for i in indices], dim=0))
+        next_states = to_device(torch.cat([torch.from_numpy(self.next_states[i]) for i in indices], dim=0))
         rewards     = to_device(torch.tensor([self.rewards[i] for i in indices], dtype=torch.float32))
         terminals   = to_device(torch.tensor([self.terminals[i] for i in indices], dtype=torch.float32))
         return states, actions, next_states, rewards, terminals
@@ -56,11 +67,11 @@ class ReplayBuffer():
     def sample_ddpg(self, batch_size):
         indices = np.random.randint(0, self.current_size, size=batch_size)
 
-        states          = to_device(torch.cat([self.states[i] for i in indices], dim=0))
-        arm_states      = to_device(torch.cat([self.arm_states[i] for i in indices], dim=0))
+        states          = to_device(torch.cat([torch.from_numpy(self.states[i]) for i in indices], dim=0))
+        arm_states      = to_device(torch.cat([torch.from_numpy(self.arm_states[i]) for i in indices], dim=0))
         actions         = to_device(torch.tensor([self.actions[i] for i in indices], dtype=torch.float32))
-        next_states     = to_device(torch.cat([self.next_states[i] for i in indices], dim=0))
-        next_arm_states = to_device(torch.cat([self.next_arm_states[i] for i in indices], dim=0))
-        rewards         = to_device(torch.tensor([self.rewards[i] for i in indices], dtype=torch.float32))
+        next_states     = to_device(torch.cat([torch.from_numpy(self.next_states[i]) for i in indices], dim=0))
+        next_arm_states = to_device(torch.cat([torch.from_numpy(self.next_arm_states[i]) for i in indices], dim=0))
+        rewards         = to_device(torch.tensor([self.rewards[i] or i in indices], dtype=torch.float32))
         terminals       = to_device(torch.tensor([self.terminals[i] for i in indices], dtype=torch.float32))
         return states, arm_states, actions, next_states, next_arm_states, rewards, terminals
