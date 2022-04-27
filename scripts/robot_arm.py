@@ -7,6 +7,7 @@ from pyrobot import Robot
 
 JOINT_LIMIT_MAX = np.pi * 0.5
 JOINT_LIMIT_MIN = -np.pi * 0.5
+JOINT_LIMIT_MIN_2 = 0.0
 ACTION_UPPER_LIMIT = 3.5
 ACTION_LOWER_LIMIT = -3.5
 NUM_ACTIONS = 7
@@ -46,7 +47,10 @@ class RobotArm():
             joint_num = int(math.floor(action - ACTION_LOWER_JOINT_LIMIT))
             current_lower = (joint_num * ACTION_INCREMENTS) + ACTION_LOWER_JOINT_LIMIT
             current_upper = current_lower + ACTION_INCREMENTS
-            joint[joint_num] = JOINT_LIMIT_MIN + (JOINT_LIMIT_MAX - JOINT_LIMIT_MIN) * ((action - current_lower) / (current_upper - current_lower))
+            if joint_num == 1:
+                joint[joint_num] = JOINT_LIMIT_MIN_2 + (JOINT_LIMIT_MAX - JOINT_LIMIT_MIN_2) * ((action - current_lower) / (current_upper - current_lower))
+            else:
+                joint[joint_num] = JOINT_LIMIT_MIN + (JOINT_LIMIT_MAX - JOINT_LIMIT_MIN) * ((action - current_lower) / (current_upper - current_lower))
 
         if use_joints:
             self.bot.arm.set_joint_positions(joint, plan=False, wait=False)

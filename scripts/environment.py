@@ -20,7 +20,7 @@ class Environment():
         self.agent = config["alg"]["agent"]
         self.threshold = config["env"]["threshold"]
 
-        self.t = 0
+        self.t = 1
         self.max_timesteps = config["env"]["max_timesteps"]
         self.current_state = None
         self.collision_listener = Collision(config, self.arm.bot)
@@ -86,7 +86,7 @@ class Environment():
     
     def is_terminal(self, next_state):
         terminal = 0.0
-        if self.t > self.max_timesteps:
+        if self.t >= self.max_timesteps:
             terminal = 1.0
         return terminal
     
@@ -122,5 +122,5 @@ class Environment():
         time.sleep(1)
 
         self.collision_listener.get_gazebo_models_init()
-        self.t = 0
+        self.t = 1
         self.current_state = self.get_state()
