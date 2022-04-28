@@ -6,20 +6,20 @@ alg:
 
 env:
     threshold: 0.05
-    ee_collision_threshold: 0.15
-    max_timesteps: 5000
+    ee_collision_threshold: 0.125
+    max_timesteps: 100
 
 robot_arm:
-    camera_tilt: 0.6
+    camera_tilt: 0.85
     delay: 0.5
     
 logger:
     average_over: 10
 
 dqn_agent:
-    size: 100000
+    size: 500
     epsilon: 0.5
-    learning_starts: 1024
+    learning_starts: 512
     learning_freq: 1
     target_update_freq: 4
     batch_size: 64
@@ -38,17 +38,17 @@ dqn_agent:
         alg: ddqn
 
 ddpg_agent:
-    size: 100000
+    size: 500
     noise: 1.0
-    learning_starts: 1024
+    learning_starts: 512
     learning_freq: 1
     target_update_freq: 1
     batch_size: 64
-    save_freq: 1000
-    load: False
+    save_freq: 100
+    load: True
     
     q_net:
-        n_conv_layers: 3
+        n_conv_layers: 8
         input_size: 480
         n_input_channels: 4
         n_channels: 16
@@ -56,7 +56,7 @@ ddpg_agent:
         stride: 2
         padding: 1
         n_linear_layers: 2
-        size: 32
+        size: 64
         activation: tanh
         gamma: 0.99
         polyak_avg: 0.01
@@ -64,7 +64,7 @@ ddpg_agent:
         grad_norm_clipping: 10
 
     actor_net:
-      n_conv_layers: 3
+      n_conv_layers: 8
       input_size: 480
       n_input_channels: 4
       n_channels: 16
@@ -72,8 +72,8 @@ ddpg_agent:
       stride: 2
       padding: 1
       n_linear_layers: 2
-      size: 32
+      size: 64
       activation: tanh
       polyak_avg: 0.01
-      lr: 0.00002
+      lr: 0.000002
       grad_norm_clipping: 10
