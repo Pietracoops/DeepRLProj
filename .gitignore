@@ -132,4 +132,7 @@ dmypy.json
 log/
 
 # Remove model files
-model/
+model/actor/fcn.pt
+model/actor/mlp.pt
+model/critic/fcn.pt
+model/critic/mlp.pt

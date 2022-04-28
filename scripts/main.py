@@ -41,6 +41,8 @@ def run_training_loop(config, env, agent, logger):
         data["reward"] = reward
         data["terminal"] = terminal
         data["update_logs"] = update_logs
+        data["collisions"] = env.collisions
+        data["grasps"] = env.grasps
         logger.log(data)
 
         if terminal == 1.0:

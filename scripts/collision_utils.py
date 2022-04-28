@@ -64,17 +64,14 @@ class Collision():
                 distance = pose_obj.GetEuclidianDistance(x, y, z)
                 if (np.abs(block._pose.x - x) > self.eps):
                     block._pose.x = x
-                    print("distance: ", distance)
                     if distance < self.threshold:
                         ret_val = True
                 if (np.abs(block._pose.y - y) > self.eps):
                     block._pose.y = y
-                    print("distance: ", distance)
                     if distance < self.threshold:
                         ret_val = True
                 if (np.abs(block._pose.z - z) > self.eps):
                     block._pose.z = z
-                    print("distance: ", distance)
                     if distance < self.threshold:
                         ret_val = True
         except rospy.ServiceException as e:

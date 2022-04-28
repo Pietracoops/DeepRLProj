@@ -45,7 +45,7 @@ ddpg_agent:
     target_update_freq: 1
     batch_size: 64
     save_freq: 1000
-    load: True
+    load: False
     
     q_net:
         n_conv_layers: 3

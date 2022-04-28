@@ -20,13 +20,14 @@ class Environment():
         self.agent = config["alg"]["agent"]
         self.threshold = config["env"]["threshold"]
 
-        self.t = 0
+        self.t = 1
         self.max_timesteps = config["env"]["max_timesteps"]
         self.current_state = None
         self.collision_listener = Collision(config, self.arm.bot)
         self.reset()
 
-        self.collision = 0
+        self.collisions = 0
+        self.grasps = 0
 
     def update(self, action):
         if self.agent == "dqn":
@@ -66,8 +67,9 @@ class Environment():
         
     def get_reward_ddpg(self, result, use_gripper, next_state):
         reward = 0.0
-        if self.collision_listener.search_for_collision() == True:
-            self.collision += 1
+        collision = self.collision_listener.search_for_collision()
+        if collision == True:
+            self.collisions += 1
             reward = 0.5
 
         if torch.abs(torch.sum(self.current_state[1] - next_state[1])).item() <= self.threshold and not use_gripper:
@@ -75,16 +77,16 @@ class Environment():
         if not result:
             reward = -1.0
 
-        if self.arm.bot.gripper.get_gripper_state() == 2:
-            #make arm put object in bin
+        if collision == True and self.arm.bot.gripper.get_gripper_state() == 2:
+            self.grasps += 1
+            self.arm.reset()
             reward = 1.0
 
-        print("Collision: ", self.collision)
         return reward
     
     def is_terminal(self, next_state):
         terminal = 0.0
-        if self.t > self.max_timesteps:
+        if self.t >= self.max_timesteps:
             terminal = 1.0
         return terminal
     
@@ -120,5 +122,5 @@ class Environment():
         time.sleep(1)
 
         self.collision_listener.get_gazebo_models_init()
-        self.t = 0
+        self.t = 1
         self.current_state = self.get_state()
