@@ -265,54 +265,18 @@ def get_rpy():
 
 def run_4corner_sim():
         # Example poses
-    target_poses = [
-        {   "position": np.array([0.1, -0.2, 0.2]), 
-            "pitch": np.pi/2, 
-            "numerical": False
-        },
-        {    "position": np.array([0.40, -0.20, 0.2]), 
-            "pitch": np.pi/2, 
-            "numerical": False
-        },
-        {
-            "position": np.array([0.40, 0.20, 0.2]),
-            "pitch": np.pi/2,
-            "numerical": False,
-        },
-        {
-            "position": np.array([0.1, 0.2, 0.2]),
-            "pitch": np.pi/2,
-            "numerical": False,
-        },
-    ]
-
     bot = Robot("locobot")
+    bot.camera.reset()
     bot.arm.go_home()
-
-    for pose in target_poses:
-        bot.arm.set_ee_pose_pitch_roll(**pose)
-        time.sleep(1)
-
-    bot.arm.go_home()
-
-    r = 0
-    c = 0
-
-    bot.camera.set_tilt(0.6)
+    #robot_move_from_cam_vision(bot)
+    
+    bot.camera.set_tilt(0.85)
     time.sleep(1)
     cv2 = try_cv2_import()
     rgb = bot.camera.get_rgb()
+    rgb = rgb[:480, :480, :]
     cv2.imshow('Color', rgb[:, :, ::-1])
     cv2.waitKey(10000)
-
-
-    pt, color = bot.camera.pix_to_3dpt(r,c)
-    for p in pt:
-        pose = {"position":p, 
-                "pitch": np.pi/2,
-                "numerical": False,}
-        print('3D point:', p)
-        bot.arm.set_ee_pose_pitch_roll(**pose)
 
 
 def robot_move_from_cam_vision(bot):
@@ -436,9 +400,4 @@ if __name__ == "__main__":
     # Function to get RGB and Depth image
     #color_image, depth_image = record_rgbd(store=False)
     
-    #robo_magic()
-    #get_position()
-    #get_rpy()
-    #run_sim()
-    #run_pic_coordinates_sim()
-    get_objects_gazebo()
+    run_4corner_sim()
